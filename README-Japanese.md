@@ -4,7 +4,7 @@ UltimateOAuth
 
 [English](https://github.com/Certainist/UltimateOAuth/blob/master/README.md)
 
-@Version: 5.1.5  
+@Version: 5.1.6  
 @Author : CertaiN  
 @License: FreeBSD  
 @GitHub : http://github.com/certainist  

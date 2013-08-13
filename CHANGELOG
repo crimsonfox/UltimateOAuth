@@ -1,6 +1,10 @@
 UltimateOAuth - changelog
 ========================
 
+5.1.6 (2013-08-14)
+- Altered not to use $errstr from fsockopen().
+  (For locale-dependent issue)
+
 5.1.5 (2013-08-03)
 - Modified endpoint parser regex.
 

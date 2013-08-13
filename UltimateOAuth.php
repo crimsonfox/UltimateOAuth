@@ -6,7 +6,7 @@
 
 /* A highly advanced Twitter library in PHP.
  * 
- * @Version: 5.1.5
+ * @Version: 5.1.6
  * @Author : CertaiN
  * @License: FreeBSD
  * @GitHub : http://github.com/certainist/UltimateOAuth
@@ -376,7 +376,7 @@ class UltimateOAuth {
         // Open socket
         $fp = @fsockopen($host, $port, $errno, $errstr, 5);
         if (!$fp) {
-            throw new RuntimeException($errstr);
+            throw new RuntimeException("Failed to connect to {$host}:{$port}");
         }
         
         // Send request
