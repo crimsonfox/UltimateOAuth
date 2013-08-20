@@ -6,7 +6,7 @@
 
 /* A highly advanced Twitter library in PHP.
  * 
- * @Version: 5.1.6
+ * @Version: 5.1.7
  * @Author : CertaiN
  * @License: FreeBSD
  * @GitHub : http://github.com/certainist/UltimateOAuth
@@ -901,13 +901,16 @@ class UltimateOAuthMulti {
         
         // Open processes
         foreach ($this->queues as $i => $queue) {
-            $procs[$i] = proc_open(
+            $procs[$i] = @proc_open(
                 UltimateOAuthConfig::PHP_COMMAND,
                 $descriptorspec,
                 $pipes[$i],
                 null,
                 null,
-                array('bypass_shell' => true)
+                array(
+                    'bypass_shell' => true,
+                    'supress_errors' => true,
+                )
             );
             if (!$procs[$i]) {
                 continue;
@@ -1137,7 +1140,7 @@ class UltimateOAuthMulti {
             }
             // Socket opening failure
             if ($r === false) {
-                $res[$i] = UltimateOAuthModule::createErrorObject($errstr);
+                $res[$i] = UltimateOAuthModule::createErrorObject("Failed to connect to {$host}:{$uri['port']}");
                 continue;
             }
             // Getting contents failure
@@ -1687,13 +1690,14 @@ class UltimateOAuthModule {
      *  (stdClass) createErrorObject() - Return an error object.
      */
     public static function createErrorObject($msg, $code = -1) {
-        return json_decode(
-            sprintf('{"errors":[{"message":%s,"code":%d}]}',
-                json_encode($msg),
-                $code
-            )
+        return (object)array(
+            'errors' => array(
+                (object)array(
+                    'code' => $code,
+                    'message' => $msg,
+                ),
+            ),
         );
-    
     }
     
     /*
