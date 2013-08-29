@@ -8,7 +8,7 @@
  * 
  * @Version: 5.1.7
  * @Author : CertaiN
- * @License: FreeBSD
+ * @License: BSD 2-Clause
  * @GitHub : http://github.com/certainist/UltimateOAuth
  * 
  * Requires PHP **5.2.0** or later.
