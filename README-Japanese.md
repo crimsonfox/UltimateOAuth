@@ -6,7 +6,7 @@ UltimateOAuth
 
 @Version: 5.1.7  
 @Author : CertaiN  
-@License: BSD 2-Clause 
+@License: BSD 2-Clause  
 @GitHub : http://github.com/certainist  
 
 
