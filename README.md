@@ -468,7 +468,6 @@ Also you can use very useful **secret endpoints**, like:
   Get activities about a specified status.
 - `GET conversation/show/:id`  
   Get statuses related to a specified status.
-
 - `POST friendships/accept`  
   Accept a specified follower request.
 - `POST friendships/deny`  

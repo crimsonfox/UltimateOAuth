@@ -472,7 +472,6 @@ $uom->execute($wait_processes);
   指定されたツイートに関するアクティビティを取得。
 - `GET conversation/show/:id`  
   指定されたツイートを含む会話を取得。
-
 - `POST friendships/accept`  
   指定されたフォローリクエストを受理する。
 - `POST friendships/deny`  
