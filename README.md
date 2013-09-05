@@ -51,7 +51,9 @@ $uom->execute ();
 
 ### UltimateOAuthRotate
 
-**UltimateOAuthRotate** supports `get`, `post`, `OAuthRequest`, `OAuthRequestMultipart` of **UltimateOAuth**, by using **__call()**.
+**UltimateOAuthRotate** supports  
+`get()`, `post()`, `postMultipart()`, `OAuthRequest()`, `OAuthRequestMultipart()`  
+of **UltimateOAuth**, by using **__call()**.
 
 ```php
 $uor = new UltimateOAuthRotate;

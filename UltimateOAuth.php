@@ -1576,7 +1576,8 @@ if (!class_exists('UltimateOAuthRotate')) {
                 } elseif (
                     !strcasecmp($name, 'post') ||
                     !strcasecmp($name, 'OAuthRequest') && isset($args[1]) && !strcasecmp($args[1], 'POST') ||
-                    !strcasecmp($name, 'OAuthRequestMultipart')
+                    !strcasecmp($name, 'OAuthRequestMultipart') ||
+                    !strcasecmp($name, 'postMultipart')
                 ) {
                     /* POST request */
                     
