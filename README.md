@@ -58,7 +58,7 @@ of **UltimateOAuth**, by using **__call()**.
 ```php
 $uor = new UltimateOAuthRotate;
 
-$uor->__call       ($name, $arguments );
+$uor->__call       ($name, $arguments);
 
 $uor->register     ($name, $consumer_key, $consumer_secret);
 $uor->login        ($username, $password, $return_array = false);
@@ -729,7 +729,7 @@ $count = count($result);
 $result = $count <= 250 ? array_keys($result) : array_rand($result, 250);
 
 // Get all screen_names of 250
-for ($i = 0; $i < $count; $i += 100) {
+for ($i = 0; $i < 250; $i += 100) {
     $res = $uo->get('users/lookup', 'user_id=' . implode(',', array_slice($result, $i, 100)));
     if (isset($res->errors)) {
         die(sprintf('Error[%d]: %s',
