@@ -550,7 +550,7 @@ Whether return responses as **array**, or if all successful as **boolean**.
 `FALSE` **(Return Boolean)** as default.
   
 - *boolean* *__\[$successively\]__*  
-Whether successively do all jobs, or parallelly do by UltimateOAuthMulti class.
+Whether successively do all jobs, or parallelly do by UltimateOAuthMulti class.  
 `FALSE` **(By UltimateOAuthMulti)** as default.
 
 =========================================
