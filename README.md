@@ -11,7 +11,7 @@ UltimateOAuth
 
 ## \[Features\]
 
-- Requires PHP **5.2.0** or later.
+- Requires PHP **5.2.1** or later.
 - Not depends on **cURL**, or any other files.
 - Both UNIX & Windows are supported.
 - Both **sync & async** requests are supported.
