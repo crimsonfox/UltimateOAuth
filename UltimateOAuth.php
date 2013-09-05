@@ -376,11 +376,13 @@ if (!class_exists('UltimateOAuth')) {
         private static function modParameters(&$params) {
             if (is_string($params)) {
                 // parse query string
-                parse_str($params, $new);
-            } elseif (is_object($params)) {
-                // convert object to array
-                $new = (array)$params;
-            } elseif (!is_array($params)) {
+                $new = array();
+                $pairs = explode('&', $params);
+                foreach ($pairs as $pair) {
+                    list($k, $v) = explode('=', $pair, 2) + array(1 => '');
+                    $new[urldecode($k)] = urldecode($v);
+                }
+            } elseif (!is_array($params) && is_object($params)) {
                 // invalid params
                 $new = array();
             } else {
