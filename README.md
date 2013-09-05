@@ -644,13 +644,13 @@ $uor->get('statuses/home_timeline');
 This library apply the header contents of  
 `x-twitter-new-account-oauth-access-token`, `x-twitter-new-account-oauth-secret`  
 as response properties.  
-You can use 
+You can use  
 `$response->consumer_key`, `$response->consumer_secret`,  
 `$response->access_token`, `$response->access_token_secret`.
 
 #### Sample code
 
-```
+```php
 <?php
 
 // Load this library
@@ -676,7 +676,7 @@ $res = $base->post('account/generate', array(
 if (isset($res->errors)) {
     die(sprintf('Error[%d]: %s',
         $res->errors[0]->code,
-        $ree->errors[0]->message
+        $res->errors[0]->message
     ));
 }
 
@@ -695,7 +695,7 @@ Some endpoints require walking cursors for getting all results.
 
 Fetch random 250 screen_name among all followers.
 
-```
+```php
 <?php
 
 // Load this library
@@ -715,7 +715,7 @@ do {
     if (isset($res->errors)) {
         die(sprintf('Error[%d]: %s',
             $res->errors[0]->code,
-            $ree->errors[0]->message
+            $res->errors[0]->message
         ));
     }
     $result += array_flip($res->ids);
@@ -732,7 +732,7 @@ for ($i = 0; $i < $count; $i+= 100) {
     if (isset($res->errors)) {
         die(sprintf('Error[%d]: %s',
             $res->errors[0]->code,
-            $ree->errors[0]->message
+            $res->errors[0]->message
         ));
     }
     $screen_names = array_merge($screen_names, $res);
