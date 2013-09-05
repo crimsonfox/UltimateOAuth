@@ -226,7 +226,7 @@ $uo = new UltimateOAuth($consumer_key, $consumer_secret, $access_token, $access_
   A random official one is used when omitted.
 - *(string)* *__\[$consumer\_secret\]__*  
   A random official one is used when omitted.
-- *(string)* *__\[$access\_token\]__*,  
+- *(string)* *__\[$access\_token\]__*  
   Necessary if you don't authenticate/authorize later.
 - *(string)* *__\[$access\_token\]__*  
   Necessary if you don't authenticate/authorize later.
@@ -267,7 +267,7 @@ $uo->OAuthRequest($endpoint, $method = "GET", $params = array(), $wait_response 
   
   **Note:**  
   You can't use this with `statuses/update_with_media`.  
-  Use **UltimateOAuth::OAuthRequestMultipart()** instead.
+  Use **UltimateOAuth::postMultipart()** instead.
   
 - *(boolean)* *__\[$wait\_resposne\]__*  
   `TRUE` as default.
@@ -293,7 +293,7 @@ $uo->OAuthRequest($endpoint, $method = "GET", $params = array(), $wait_response 
   > - *(string)* `$response->errors[0]->message`  
   >   An error message.
   
-- If `$wait_response` is set to FALSE, quickly return `NULL`.
+- If `$wait_response` is set to `FALSE`, quickly return `NULL`.
 
 
 =========================================
@@ -313,7 +313,7 @@ $uo->post($endpoint, $params, $wait_response);
 ### UltimateOAuth::postMultipart()<br />UltimateOAuth::OAuthRequestMultipart()
 
 Mainly used for the endpoint `statuses/update_with_media`.  
-postMultipart() and OAuthRequestMultipart are completely equal.
+**postMultipart()** and **OAuthRequestMultipart()** are completely equal.
 
 ```php
 $uo->postMultipart($endpoint, $params, $wait_response);
@@ -383,7 +383,7 @@ $uo->getAuthorizeURL($force_login);
   
 #### Return Value
 
-- URL String.
+- A URL String.
 
 #### Note: What is the difference between *Authenticate* and *Authorize* ?
 
@@ -426,7 +426,7 @@ $uom->enqueue($uo, $method, $arg1, $arg2, ...);
 
 #### Arguments
 
-- *(UltimateOAuth)* *__$uo__*  
+- *(UltimateOAuth)* *__&$uo__*  
   An **UltimateOAuth** object. **Passed by reference**.
   
 - *(string)* *__$method__*  
@@ -544,17 +544,17 @@ $uor->login($username, $password, $return_array, $successively);
   
 - *string* *__[\$return\_array\]__*  
 Whether return responses as **array**, or if all successful as **boolean**.  
-`FALSE`(Return Boolean) as default.
+`FALSE` **(Return Boolean)** as default.
   
-- *boolean* [$successively]  
+- *boolean* *__[\$successively\]__*  
 Whether successively do all jobs, or parallelly do by UltimateOAuthMulti class.
-`FALSE`(By UltimateOAuthMulti) as default.
+`FALSE` **(By UltimateOAuthMulti)** as default.
 
 =========================================
 
 ### UltimateOAuthRotate::setCurrent()
 
-Select an application for `POST` requesting.  
+Select an application for **POST** requesting.  
 GET requests have nothing to do with this.
 
 ```php

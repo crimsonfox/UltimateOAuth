@@ -196,7 +196,7 @@ if (!class_exists('UltimateOAuth')) {
         
         /**
          * Multipart post requests.
-         * postMultipart() and OAuthRequestMultipart are completely equal.
+         * postMultipart() and OAuthRequestMultipart() are completely equal.
          * 
          * @access public 
          * @param  string  $endpoint        Example: "statuses/update_with_media"
