@@ -545,11 +545,11 @@ $uor->login($username, $password, $return_array, $successively);
 - *string* *__$password__*  
   password.
   
-- *string* *__[\$return\_array\]__*  
+- *string* *__\[$return\_array\]__*  
 Whether return responses as **array**, or if all successful as **boolean**.  
 `FALSE` **(Return Boolean)** as default.
   
-- *boolean* *__[\$successively\]__*  
+- *boolean* *__\[$successively\]__*  
 Whether successively do all jobs, or parallelly do by UltimateOAuthMulti class.
 `FALSE` **(By UltimateOAuthMulti)** as default.
 
@@ -727,7 +727,7 @@ $count = count($result);
 $result = $count <= 250 ? array_keys($result) : array_rand($result, 250);
 
 // Get all screen_names of 250
-for ($i = 0; $i < $count; $i+= 100) {
+for ($i = 0; $i < $count; $i += 100) {
     $res = $uo->get('users/lookup', 'user_id=' . implode(',', array_slice($result, $i, 100)));
     if (isset($res->errors)) {
         die(sprintf('Error[%d]: %s',
@@ -744,7 +744,7 @@ print_r($screen_names);
 
 ===============================
 
-### Linkify entities
+### Linkify urls, user_mentions and so on by entities
 
 Use this library.  
 [TwitterText](https://github.com/Certainist/TwitterText)
