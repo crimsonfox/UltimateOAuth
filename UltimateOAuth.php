@@ -5,7 +5,7 @@
  * 
  * A highly advanced Twitter library in PHP.
  * 
- * @Version 5.2.0
+ * @Version 5.2.1
  * @Author  CertaiN
  * @License BSD 2-Clause
  * @GitHub  http://github.com/certainist/UltimateOAuth
@@ -1580,6 +1580,9 @@ if (!class_exists('UltimateOAuthRotate')) {
                 ) {
                     /* POST request */
                     
+                    // get endpoint
+                    $elements = UltimateOAuthModule::parseUri($args[0]);
+                    $endpoint = $elements['path'];
                     // initialize if necessary
                     if ($this->current['POST'] === null) {
                         if ($this->instances['original']) {
@@ -1594,15 +1597,15 @@ if (!class_exists('UltimateOAuthRotate')) {
                     do {
                         // judge if sign-up consumer_key necessary
                         foreach ($post_ex1 as $ex) {
-                            if (strpos($args[0], $ex) !== false) {
-                                $obj = $this->instances[array_rand($this->instances['signup'])];
+                            if (strpos($endpoint, $ex) !== false) {
+                                $obj = $this->instances['signup'][array_rand($this->instances['signup'])];
                                 break 2;
                             }
                         }
                         // judge if official consumer_key necessary
                         foreach ($post_ex2 as $ex) {
-                            if (strpos($args[0], $ex) !== false) {
-                                $obj = $this->instances[array_rand($this->instances['official'])];
+                            if (strpos($endpoint, $ex) !== false) {
+                                $obj = $this->instances['official'][array_rand($this->instances['official'])];
                                 break 2;
                             }
                         }
@@ -1620,7 +1623,7 @@ if (!class_exists('UltimateOAuthRotate')) {
                 
                 // return an error object
                 return UltimateOAuthModule::createErrorObject($e->getMessage());
-            
+                
             }
         
         }

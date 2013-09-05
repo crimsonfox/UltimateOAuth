@@ -657,7 +657,7 @@ You can use
 require_once('UltimateOAuth.php');
 
 // Get a sign-up instance
-$base = UltimateOAuthRotate;
+$base = new UltimateOAuthRotate;
 $base = $base->getInstance('Twitter for Android Sign-Up');
 
 // Authorize yourself

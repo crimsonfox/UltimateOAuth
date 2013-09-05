@@ -1,6 +1,9 @@
 UltimateOAuth - changelog
 ========================
 
+5.2.1 (2013-09-05)
++ Fixed rotation bugs
+
 5.2.0 (2013-09-05)
 + Supported easy account generation.
 + UltimateOAuth::postMultipart()
