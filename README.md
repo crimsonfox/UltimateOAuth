@@ -4,14 +4,14 @@ UltimateOAuth
 
 [日本語](https://github.com/Certainist/UltimateOAuth/blob/master/README-Japanese.md)
 
-@Version: 5.2.0  
+@Version: 5.2.1  
 @Author : CertaiN  
 @License: BSD 2-Clause  
 @GitHub : http://github.com/certainist  
 
 ## \[Features\]
 
-- Requires PHP **5.2.1** or later.
+- Requires PHP **5.2.0** or later.
 - Not depends on **cURL**, or any other files.
 - Both UNIX & Windows are supported.
 - Both **sync & async** requests are supported.
