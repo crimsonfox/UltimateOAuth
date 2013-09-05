@@ -81,7 +81,9 @@ Edit constants of **UltimateOAuthConfig**.
   
   > - `USE_PROC_OPEN`: **TRUE** (default)
   
-
+  
+------------------------------------------------------------------
+  
 1. OAuth Authentication
 -----------------------
 
@@ -392,6 +394,7 @@ $uo->getAuthorizeURL($force_login);
 | New User       | Jump to Twitter | Jump to Twitter |
 | Logined User   | Jump to Twitter, but if you set your application<br /> **__Allow this application to be used to Sign in with Twitter__**, <br />quickly jump back to your callback URL.  |  Jump to Twitter  |
 
+------------------------------------------------------------------
 
 2-2. Class Detail - UltimateOAuthMulti
 --------------------------------------
@@ -459,7 +462,7 @@ $uom->execute($wait_processes);
 - Return an **Array**, collection of the results.
 
 
-=========================================
+------------------------------------------------------------------
 
 
 2-3. Class Detail - UltimateOAuthRotate
@@ -628,3 +631,123 @@ Example:
 ```php
 $uor->get('statuses/home_timeline');
 ```
+
+------------------------------------------------------------------
+
+3. Other Examples
+------------------
+
+### Generate an account
+
+#### Important
+
+This library apply the header contents of  
+`x-twitter-new-account-oauth-access-token`, `x-twitter-new-account-oauth-secret`  
+as response properties.  
+You can use 
+`$response->consumer_key`, `$response->consumer_secret`,  
+`$response->access_token`, `$response->access_token_secret`.
+
+#### Sample code
+
+```
+<?php
+
+// Load this library
+require_once('UltimateOAuth.php');
+
+// Get a sign-up instance
+$base = UltimateOAuthRotate;
+$base = $base->getInstance('Twitter for Android Sign-Up');
+
+// Authorize yourself
+$base->directGetToken('Your screen_name', 'Your password');
+
+// Create a new account
+$random_string = substr(md5(mt_rand()), 0, 15);
+$res = $base->post('account/generate', array(
+    'name'     => 'HAHAHAHA',
+    'username' => $random_string,
+    'password' => 'test1234',
+    'email'    => $random_string . '@examples.com',
+));
+
+// Check errors
+if (isset($res->errors)) {
+    die(sprintf('Error[%d]: %s',
+        $res->errors[0]->code,
+        $ree->errors[0]->message
+    ));
+}
+
+// Test tweet
+$uo = new UltimateOAuth($res->consumer_key, $res->consumer_secret, $res->access_token, $res->access_token_secret);
+$uo->post('statuses/update', 'status=HAHAHAHA!!!!');
+```
+
+================================
+
+### Walk cursors
+
+Some endpoints require walking cursors for getting all results.
+
+#### Sample code
+
+Fetch random 250 screen_name among all followers.
+
+```
+<?php
+
+// Load this library
+require_once('UltimateOAuth.php');
+
+// Create a new instance
+$uo = new UltimateOAuth('CK', 'CS', 'AT', 'AS');
+
+// Initialization
+$cursor = '-1';
+$result = array();
+$screen_names = array();
+
+// Walk cursors
+do {
+    $res = $uo->get('followers/ids', 'stringify_ids=1&cursor=' . $cursor);
+    if (isset($res->errors)) {
+        die(sprintf('Error[%d]: %s',
+            $res->errors[0]->code,
+            $ree->errors[0]->message
+        ));
+    }
+    $result += array_flip($res->ids);
+    $cursor = $res->next_cursor_str;
+} while ($cursor);
+
+// Get 250 of them
+$count = count($result);
+$result = $count <= 250 ? array_keys($result) : array_rand($result, 250);
+
+// Get all screen_names of 250
+for ($i = 0; $i < $count; $i+= 100) {
+    $res = $uo->get('users/lookup', 'user_id=' . implode(',', array_slice($result, $i, 100)));
+    if (isset($res->errors)) {
+        die(sprintf('Error[%d]: %s',
+            $res->errors[0]->code,
+            $ree->errors[0]->message
+        ));
+    }
+    $screen_names = array_merge($screen_names, $res);
+}
+
+// Output
+print_r($screen_names);
+```
+
+===============================
+
+### Linkify entities
+
+Use this library.  
+[TwitterText](https://github.com/Certainist/TwitterText)
+
+
+
