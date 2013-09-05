@@ -4,35 +4,40 @@ UltimateOAuth
 
 [日本語](https://github.com/Certainist/UltimateOAuth/blob/master/README-Japanese.md)
 
-@Version: 5.1.7  
+@Version: 5.2.0  
 @Author : CertaiN  
 @License: BSD 2-Clause  
 @GitHub : http://github.com/certainist  
 
+## \[Features\]
 
-## \[System Requirements\]
 - Requires PHP **5.2.0** or later.
-- Not depends on **cURL**.
-- Not depends on any other files.
-- Supports both UNIX and Windows.
-
+- Not depends on **cURL**, or any other files.
+- Both UNIX & Windows are supported.
+- Both **sync & async** requests are supported.
+- **Para-xAuth authorization** is supported.
+- **Account generation** is supported.
+- You can **avoid API limit** easily.
 
 ## \[Supported Classes and Methods\]
 
 ### UltimateOAuth
 
 ```php
-$uo = new UltimateOAuth( $consumer_key, $consumer_secret, $access_token="", $access_token_secret="" );
+$uo = new UltimateOAuth(
+    $consumer_key = "", $consumer_secret = "", $access_token = "", $access_token_secret = ""
+);
 
-(stdClass|Array)      $uo->get                   ( $endpoint,                $params=array()                      );
-(stdClass|      Void) $uo->post                  ( $endpoint,                $params=array(), $wait_response=true );
-(stdClass|Array|Void) $uo->OAuthRequest          ( $endpoint, $method="GET", $params=array(), $wait_response=true );
-(stdClass|      Void) $uo->OAuthRequestMultipart ( $endpoint,                $params=array(), $wait_response=true );
+$uo->get                   ($endpoint,                  $params = array()                       );
+$uo->post                  ($endpoint,                  $params = array(), $wait_response = true);
+$uo->postMultipart         ($endpoint,                  $params = array(), $wait_response = true);
+$uo->OAuthRequest          ($endpoint, $method = "GET", $params = array(), $wait_response = true);
+$uo->OAuthRequestMultipart ($endpoint,                  $params = array(), $wait_response = true);
 
-(stdClass) $uo->directGetToken ( $username, $password );
+$uo->directGetToken ($username, $password);
 
-(String) $uo->getAuthorizeURL    ( $force_login=false );
-(String) $uo->getAuthenticateURL ( $force_login=false );
+$uo->getAuthorizeURL    ($force_login = false);
+$uo->getAuthenticateURL ($force_login = false);
 ```
 
 ### UltimateOAuthMulti
@@ -40,8 +45,8 @@ $uo = new UltimateOAuth( $consumer_key, $consumer_secret, $access_token="", $acc
 ```php
 $uom = new UltimateOAuthMulti;
 
-(Void)  $uom->enqueue ( &$uo, $method, $arg1, $arg2, $arg3, ... );
-(Array) $uom->execute ();
+$uom->enqueue (&$uo, $method, $arg1, $arg2, $arg3, ...);
+$uom->execute ();
 ```
 
 ### UltimateOAuthRotate
@@ -51,13 +56,13 @@ $uom = new UltimateOAuthMulti;
 ```php
 $uor = new UltimateOAuthRotate;
 
-(mixed)              $uor->__call       ( $name, $arguments );
+$uor->__call       ($name, $arguments );
 
-(Bool)               $uor->register     ( $name, $consumer_key, $consumer_secret );
-(Bool|Array)         $uor->login        ( $username, $password, $return_array=false );
-(Bool)               $uor->setCurrent   ( $name );
-(UltimateOAuth|Bool) $uor->getInstance  ( $name );
-(Array)              $uor->getInstances ( );
+$uor->register     ($name, $consumer_key, $consumer_secret);
+$uor->login        ($username, $password, $return_array = false);
+$uor->setCurrent   ($name);
+$uor->getInstance  ($name);
+$uor->getInstances ();
 ```
 
 ------------------------------------------------------------------
@@ -93,9 +98,11 @@ require_once('UltimateOAuth.php');
 // Start session
 session_start();
 
-// Create a new UltimateOAuth instance and set it into the session
-$_SESSION['uo'] = new UltimateOAuth('YOUR_CONSUMER_KEY', 'YOUR_CONSUMER_SECRET');
-$uo = $_SESSION['uo'];
+// Create a new UltimateOAuth instance
+$uo = new UltimateOAuth('YOUR_CONSUMER_KEY', 'YOUR_CONSUMER_SECRET');
+
+// Store as a session var
+$_SESSION['uo'] = $uo;
 
 // Get request_token
 $res = $uo->post('oauth/request_token');
@@ -112,7 +119,7 @@ $url = $uo->getAuthenticateURL();
 // $url = $uo->getAuthorizeURL();
 
 // Jump to Twitter
-header('Location: '.$url);
+header('Location: ' . $url);
 exit();
 ```
 
@@ -134,10 +141,12 @@ session_start();
 if (!isset($_SESSION['uo'])) {
     die('Error[-1]: Session timeout.');
 }
+
+// Restore from session
 $uo = $_SESSION['uo'];
 
 // Check oauth_verifier
-if (!isset($_GET['oauth_verifier']) || !is_string($_GET['oauth_verifier'])) {
+if (!isset($_GET['oauth_verifier'])) {
     die('Error[-1]: No oauth_verifier');
 }
 
@@ -173,13 +182,13 @@ session_start();
 if (!isset($_SESSION['uo'])) {
     die('Error[-1]: Session timeout.');
 }
+
+// Restore from session
 $uo = $_SESSION['uo'];
 
-// Let's tweet
-$uo->post('statuses/update', 'status=Whohoo, I just tweeted!');
+// Let's tweet!
+$uo->post('statuses/update', 'status=TWEEEEEEEEEEEEEEETING!!!!');
 ```
-
-
 
 **Note1:**  
 If you already have `access_token` and `access_token_secret`,  
@@ -196,7 +205,6 @@ $uo = new UltimateOAuth($consumer_key, $consumer_secret, $access_token, $access_
 **Note2:**  
 For saving authenticated UltimateOAuth object as string, use `serialize()` and `unserialize()`.
 
-
 ------------------------------------------------------------------
 
 2-1. Class Detail - UltimateOAuth
@@ -204,50 +212,55 @@ For saving authenticated UltimateOAuth object as string, use `serialize()` and `
 
 ### UltimateOAuth::__construct()
 
+Create a new UltimateOAuth instance.
+
 ```php
-<?php
+$uo = new UltimateOAuth;
+$uo = new UltimateOAuth($consumer_key, $consumer_secret);
 $uo = new UltimateOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
 ```
 
 #### Arguments
 
-- *__$consumer\_key__*, *__$consumer\_secret__*  
-  **Required**.
+- *(string)* *__\[$consumer\_key\]__*  
+  A random official one is used when omitted.
+- *(string)* *__\[$consumer\_secret\]__*  
+  A random official one is used when omitted.
+- *(string)* *__\[$access\_token\]__*,  
+  Necessary if you don't authenticate/authorize later.
+- *(string)* *__\[$access\_token\]__*  
+  Necessary if you don't authenticate/authorize later.
   
-- *__$access\_token__*, *__$access\_token__*  
-  Not necessary if you authenticate or authorize later.
-
 =========================================
 
 ### UltimateOAuth::OAuthRequest()
 
+Used for requests mainly.
+
 ```php
-<?php
-$uo->OAuthRequest($endpoints, $method, $params, $wait_response);
+$uo->OAuthRequest($endpoint, $method = "GET", $params = array(), $wait_response = true);
 ```
 
 #### Arguments
 
-- *__$endpoints__*  
+- *(string)* *__$endpoint__*  
   See [API Documentation](https://dev.twitter.com/docs/api/1.1).  
   Examples:  
   `statuses/update`, `1.1/statuses/update`, `https://api.twitter.com/1.1/statuses/update.json`
   
-- *__$method__*  
-  `GET` or `POST`. Case-insensitive.
+- *(string)* *__\[$method\]__*  
+  `POST` or `GET`. Case-insensitive. `GET` as default.
   
-- *__$params__*  
-  **Query String** (Not URL encoded) or **Associative Array**.  
+- *(mixed)* *__\[$params\]__*  
+  **Query String** or **Associative Array**.  
   Examples:
   ```php
-  <?php
   $params = 'status=TestTweet';
   $params = array('status' => 'TestTweet');
   ```
   For uploading files:
   ```php
-  <?php
-  $params = '@image='.$filename;
+  $params = '@image=' . $filename;
   $params = array('@image' => $filename);
   $params = array('image' => base64_encode(file_get_contents($filename)));
   ```
@@ -256,8 +269,8 @@ $uo->OAuthRequest($endpoints, $method, $params, $wait_response);
   You can't use this with `statuses/update_with_media`.  
   Use **UltimateOAuth::OAuthRequestMultipart()** instead.
   
-- *__$wait\_resposne__*  
-  **TRUE** as default.
+- *(boolean)* *__\[$wait\_resposne\]__*  
+  `TRUE` as default.
   See below.
 
 #### Return Value
@@ -269,17 +282,18 @@ $uo->OAuthRequest($endpoints, $method, $params, $wait_response);
   Some endpoints get **Query String**, but it is parsed and returned as **stdClass**.  
   Example: `oauth/request_token`, `oauth/access_token`
   
-- If it failed, return **Error Object**. It has the following structure:
+- If it failed, return an **Error Object**.  
+  It has the following structure.
   
-  > - `(int) $response->errors[0]->code`  
+  > - *(integer)* `$response->errors[0]->code`  
   >   **HTTP STATUS CODE**. Not an error code.  
   >   All error codes are overwritten with HTTP status codes.  
-  >   If a local error occurred, this will be **-1**.
+  >   If a local error occurred, this will be `-1`.
   >   
-  > - `(string) $response->errors[0]->message`  
+  > - *(string)* `$response->errors[0]->message`  
   >   An error message.
   
-- If `$wait_response` has been set to FALSE, return **NULL**.
+- If `$wait_response` is set to FALSE, quickly return `NULL`.
 
 
 =========================================
@@ -287,43 +301,41 @@ $uo->OAuthRequest($endpoints, $method, $params, $wait_response);
 
 ### UltimateOAuth::get()<br />UltimateOAuth::post()
 
-```php
-<?php
-$uo->get($endpoints, $params);
-$uo->post($endpoints, $params, $wait_response);
-```
+A wrapper for **UltimateOAuth::OAuthRequest()**.
 
-Wrapper for **UltimateOAuth::OAuthRequest()**.
+```php
+$uo->get($endpoint, $params);
+$uo->post($endpoint, $params, $wait_response);
+```
 
 =========================================
 
+### UltimateOAuth::postMultipart()<br />UltimateOAuth::OAuthRequestMultipart()
 
-### UltimateOAuth::OAuthRequestMultipart()
-
-Mainly used for the endpoint `statuses/update_with_media`.
+Mainly used for the endpoint `statuses/update_with_media`.  
+postMultipart() and OAuthRequestMultipart are completely equal.
 
 ```php
-<?php
-$uo->OAuthRequestMultipart($endpoints, $params, $wait_response);
+$uo->postMultipart($endpoint, $params, $wait_response);
+$uo->OAuthRequestMultipart($endpoint, $params, $wait_response);
 ```
 
 #### Arguments
 
-- *__$endpoints__*  
+- *(string)* *__$endpoint__*  
   Example: `statuses/update_with_media`
   
-- *__$params__*  
+- *(string)* *__\[$params\]__*  
   Examples:
   ```php 
-  <?php
-  $params = '@media[]='.$filename;
+  $params = '@media[]=' . $filename;
   $params = array('@media[]' => $filename);
   $params = array('media[]' => file_get_contents($filename));
   ```
   
-- *__$wait\_response__*  
+- *(boolean)* *__\[$wait\_response\]__*  
   Same as  **UltimateOAuth::OAuthRequest()**.
-  **TRUE** as default.
+  `TRUE` as default.
   
 #### Return Value
 - Same as **UltimateOAuth::OAuthRequest()**.
@@ -331,23 +343,21 @@ $uo->OAuthRequestMultipart($endpoints, $params, $wait_response);
 
 =========================================
 
-  
 ### UltimateOAuth::directGetToken()
 
-This method enables you to use OAuth like **xAuth**.
-I named this **para-xAuth** authentication.
+This method enables you to use OAuth like xAuth.  
+This was named as **para-xAuth** authentication.
 
 ```php
-<?php
 $uo->directGetToken($username, $password);
 ```
 
 #### Arguments
  
-- *__$username__*  
+- *(string)* *__$username__*  
   *screen_name* or E-mail Address.
   
-- *__$password__*  
+- *(string)* *__$password__*  
   password.
   
 #### Return Value
@@ -356,20 +366,20 @@ $uo->directGetToken($username, $password);
 
 =========================================
 
-
 ### UltimateOAuth::getAuthenticateURL()<br />UltimateOAuth::getAuthorizeURL()
 
+Get URL for authorization/authentication.
+
 ```php
-<?php
 $uo->getAuthenticateURL($force_login);
 $uo->getAuthorizeURL($force_login);
 ```
 
 #### Arguments
 
-- *__$force\_login__*  
+- *(boolean)* *__$force\_login__*  
   Whether force logined user to login again.
-  **FALSE** as default.
+  `FALSE` as default.
   
 #### Return Value
 
@@ -394,8 +404,9 @@ This class enables you to execute multiple request **parallelly**.
 
 ### UltimateOAuthMulti::__construct()
 
+Create a new UltimateOAuthMulti instance.
+
 ```php
-<?php
 $uom = new UltimateOAuthMulti;
 ```
 
@@ -408,23 +419,21 @@ $uom = new UltimateOAuthMulti;
 Enqueue a new job.
 
 ```php
-<?php
 $uom->enqueue($uo, $method, $arg1, $arg2, ...);
 ```
 
-
 =========================================
-
 
 #### Arguments
 
-- *__$uo__*  
-  **UltimateOAuth** object. **Passed by reference**.
+- *(UltimateOAuth)* *__$uo__*  
+  An **UltimateOAuth** object. **Passed by reference**.
   
-- *__$method__*  
+- *(string)* *__$method__*  
+  A method name. This meanas **CLASS METHOD**. Not a HTTP method.  
   Example: `post`
   
-- *__$arg1__*, *__$arg2__*, *__...__*  
+- *(mixed)* *__\[$arg1\]__*, *__\[$arg2\]__*, *__\[...\]__*  
   Example: `'statuses/update', 'status=TestTweet'`
 
 =========================================
@@ -436,15 +445,14 @@ Execute All jobs.
 After executing, all queues are dequeued.
 
 ```php
-<?php
 $uom->execute($wait_processes);
 ```
 
 #### Arguments
 
-- *__$wait\_processes__*  
+- *(boolean)* *__\[$wait\_processes\]__*  
   Same as *__$wait\_response__* of **UltimateOAuth::OAuthRequest()**.  
-  **TRUE** as default.
+  `TRUE` as default.
   
 #### Return Value
 
@@ -474,13 +482,16 @@ Also you can use very useful **secret endpoints**, like:
   Deny a specified follower request.
 - `POST friendships/accept_all`  
   Accept all follower requests.
+- `POST account/generate`  
+  Create a new account.
 
 =========================================
   
 ### UltimateOAuthRotate::__construct()
 
+Create a new UltimateOAuthRotate instance.
+
 ```php
-<?php
 $uor = new UltimateOAuthRotate;
 ```
 
@@ -491,22 +502,23 @@ $uor = new UltimateOAuthRotate;
 Register your own application.
 
 ```php
-<?php
 $uor->register($name, $consumer_key, $consumer_secret);
 ```
 
 #### Arguments
 
-- *__$name__*  
+- *(string)* *__$name__*  
   Any name is okay as long as not duplicate with official applications already registered.  
   Just used for identification.  
   Example: `my_app_01`
-- *__$consumer\_key__*
-- *__$consumer\_secret__*
+  
+- *(string)* *__$consumer\_key__*
+
+- *(string)* *__$consumer\_secret__*
 
 #### Return Value
 
-- Return result as **TRUE or FALSE**.
+- Return result as `TRUE` or `FALSE`.
 
 
 =========================================
@@ -514,38 +526,35 @@ $uor->register($name, $consumer_key, $consumer_secret);
 
 ### UltimateOAuthRotate::login()
 
-Login with all registered applications.
+Login with all registered applications.  
 This method depends on **UltimateOAuthMulti** class.
 
 ```php
 <?php
-$uor->login($username, $password, $return_array);
+$uor->login($username, $password, $return_array, $successively);
 ```
 
-#### Arguments
+#### Arguments and Return Value
  
-- *__$username__*  
+- *string* *__$username__*  
   *screen_name* or E-mail Address.
   
-- *__$password__*  
+- *string* *__$password__*  
   password.
   
-- *__$return\_array__*  
-  **FALSE** as default.  
-  See below.
+- *string* *__[\$return\_array\]__*  
+Whether return responses as **array**, or if all successful as **boolean**.  
+`FALSE`(Return Boolean) as default.
   
-#### Return Value
-
-- If `$return_array` is FALSE, return result as **TRUE or FALSE**.
-
-- If `$return_array` is TRUE, return an **Array**, collection of the results.
-
+- *boolean* [$successively]  
+Whether successively do all jobs, or parallelly do by UltimateOAuthMulti class.
+`FALSE`(By UltimateOAuthMulti) as default.
 
 =========================================
 
 ### UltimateOAuthRotate::setCurrent()
 
-Select an application for **POST** requesting.
+Select an application for `POST` requesting.  
 GET requests have nothing to do with this.
 
 ```php
@@ -555,12 +564,12 @@ $uor->setCurrent($name);
 
 #### Arguments
 
-- *__$name__*  
+- *(string)* *__$name__*  
   Example: `my_app_01`
 
 #### Return Value
 
-- Return result as **TRUE or FALSE**.
+- Return result as `TRUE` or `FALSE`.
 
 
 =========================================
@@ -568,21 +577,20 @@ $uor->setCurrent($name);
 
 ### UltimateOAuthRotate::getInstance($name)
 
-Get **clone** of specified UltimateOAuth Instance.
+Get a **clone** of specified UltimateOAuth Instance.
 
 ```php
-<?php
 $uor->getInstance($name);
 ```
 
 #### Arguments
 
-- *__$name__*  
+- *(string)* *__$name__*  
   Example: `my_app_01`
   
 #### Return Value
 
-- Return **UltimateOAuth** instance or **FALSE**.
+- Return **UltimateOAuth** instance or `FALSE`.
 
 =========================================
 
@@ -592,16 +600,16 @@ $uor->getInstance($name);
 Get **clones** of all UltimateOAuth Instance.
 
 ```php
-<?php
 $uor->getInstances($type);
 ```
 
 #### Arguments
 
-- *__$type__*  
+- *(integer)* *__$type__*  
   __0__ - Return all instances **(Default)**  
   __1__ - Return official instances  
-  __2__ - Return original instances
+  __2__ - Return original instances  
+  __3__ - Return sign-up instances
   
 #### Return Value
 
@@ -613,10 +621,10 @@ $uor->getInstances($type);
 
 ### UltimateOAuthRotate::__call()
 
-Call an **UltimateOAuth** method.
+You can call an **UltimateOAuth** method.  
+A magic method `__call()` enables you to do like this.
 
 Example:
 ```php
-<?php
 $uor->get('statuses/home_timeline');
 ```

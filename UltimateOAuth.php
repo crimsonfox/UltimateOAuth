@@ -223,7 +223,7 @@ if (!class_exists('UltimateOAuth')) {
          * 
          * @access public 
          * @param  string  $endpoint        Example: "users/show"
-         * @param  string  [$method]        "POST" or "GET". "GET" as default.
+         * @param  string  [$method]        "POST" or "GET". Case-insensitive. "GET" as default.
          * @param  mixed   [$params]        An associative array or a urlencoded or non-urlencoded query string.
          * @param  boolean [$wait_response] Whether synchronous or not. True as default.
          * @return mixed                    A response through json_deocde().
@@ -866,7 +866,7 @@ if (!class_exists('UltimateOAuthMulti')) {
          * 
          * @access public
          * @param  UltimateOAuth &$uo    Passed by reference.
-         * @param  string        $method Interface method name.
+         * @param  string        $method A method name. This meanas CLASS METHOD. Not a HTTP method.
          * @param  mixed         [...]   Additional arguments for the method.
          */
         public function enqueue(UltimateOAuth &$uo, $method) {
@@ -1179,7 +1179,6 @@ if (!class_exists('UltimateOAuthMulti')) {
                     continue;
                 }
                 // invalid response
-                var_dump($r);
                 $r = explode("\r\n\r\n", $r, 2) + array(1 => '');
                 $r = json_decode($r[1]);
                 if (!isset($r->result)) {
@@ -1329,6 +1328,7 @@ if (!class_exists('UltimateOAuthMulti')) {
  *
  * Rotation managing class.
  * This enables you to avoid API limits easily.
+ * Also you can use very useful secret endpoints.
  */
 if (!class_exists('UltimateOAuthRotate')) {
     
@@ -1348,7 +1348,7 @@ if (!class_exists('UltimateOAuthRotate')) {
         /**
          * Create a new UltimateOAuthRotate instance.
          * 
-         * @access public 
+         * @access public
          */
         public function __construct() {
             // initialize properties
@@ -1417,6 +1417,7 @@ if (!class_exists('UltimateOAuthRotate')) {
         
         /**
          * Login.
+         * This method can depends on UltimateOAuthMulti class.
          * 
          * @access public
          * @param  string  $username       screen_name or E-mail address.
@@ -1424,13 +1425,13 @@ if (!class_exists('UltimateOAuthRotate')) {
          * @param  boolean [$return_array] Whether return responses as array,
          *                                 or if all successful as boolean.
          *                                 FALSE(Return Boolean) as default.
-         * @param  boolean [$sync]         Whether synchronously do all jobs,
-         *                                 or asynchronously do by UltimateOAuthMulti class.
+         * @param  boolean [$successively] Whether successively do all jobs,
+         *                                 or parallelly do by UltimateOAuthMulti class.
          *                                 FALSE(By UltimateOAuthMulti) as default.
          * @return mixed
          */
-        public function login($username, $password, $return_array = false, $sync = false) {
-            if ($sync) {
+        public function login($username, $password, $return_array = false, $successively = false) {
+            if ($successively) {
                 $keys = $this->instances['original'] + $this->instances['official'] + $this->instances['signup'];
                 $res = array();
                 foreach ($keys as $i => $uo) {
