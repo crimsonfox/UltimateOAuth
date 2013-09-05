@@ -4,10 +4,6 @@
  * UltimateOAuth
  * 
  * A highly advanced Twitter library in PHP.
- * Requires PHP **5.2.0** or later.
- * Not depends on **cURL**.
- * Not depends on any other files.
- * Supports both UNIX and Windows.
  * 
  * @Version 5.2.0
  * @Author  CertaiN
@@ -66,11 +62,13 @@ if (!interface_exists('UltimateOAuthConfig')) {
          * @constant string DEFAULT_HOST                 This must be "api.twitter.com" now.
          * @constant string DEFAULT_API_VERSION          This must be "1.1" now.
          * @constant string DEFAULT_ACTIVITY_API_VERSION This should be "1.1" now.
+         * @constant string DEFAULT_GENERATE_API_VERSION This must be "1".
          */
         const DEFAULT_SCHEME               = 'https';
         const DEFAULT_HOST                 = 'api.twitter.com' ;
         const DEFAULT_API_VERSION          = '1.1';
         const DEFAULT_ACTIVITY_API_VERSION = '1.1';
+        const DEFAULT_GENERATE_API_VERSION = '1';
         
         /**
          * User-Agent for requesting.
@@ -128,8 +126,8 @@ if (!class_exists('UltimateOAuth')) {
          * Other arguments are only internally used.
          */
         public function __construct(
-            $consumer_key,
-            $consumer_secret,
+            $consumer_key          = '',
+            $consumer_secret       = '',
             $access_token          = '',
             $access_token_secret   = '',
             $request_token         = '',
@@ -142,7 +140,7 @@ if (!class_exists('UltimateOAuth')) {
             $user_id               = '',
             $screen_name           = ''
         ) {
-            if (func_get_args() < 2) {
+            if (func_num_args() < 2) {
                 // use random official keys
                 $key = array_rand($officials = UltimateOAuthModule::getOfficialKeys());
                 $this->consumer_key    = $officials[$key]['consumer_key'];
@@ -456,22 +454,30 @@ if (!class_exists('UltimateOAuth')) {
             ));
             $pattern = "/^(?:{$names}):(.+?)(?:;|$)/mi";
             if (preg_match_all($pattern, $res[0], $matches)) {
-                $matches = array_map('array_filter', $matches, array_fill(0, 4, 'strlen'));
                 foreach ($matches[1] as $i => $v) {
+                    if ($v === '') {
+                        continue;
+                    }
                     $pair = explode('=', trim($matches[4][$i]), 2) + array(1 => '');
                     $this->cookie[$pair[0]] = $pair[1];
                 }
                 foreach ($matches[2] as $i => $v) {
+                    if ($v === '') {
+                        continue;
+                    }
                     if (!is_object($xauth_info)) {
                         $xauth_info = new stdClass;
                     }
-                    $xauth_info->access_token = $matches[4][$i];
+                    $xauth_info->access_token = trim($matches[4][$i]);
                 }
                 foreach ($matches[3] as $i => $v) {
+                    if ($v === '') {
+                        continue;
+                    }
                     if (!is_object($xauth_info)) {
                         $xauth_info = new stdClass;
                     }
-                    $xauth_info->access_token_secret = $matches[4][$i];
+                    $xauth_info->access_token_secret = trim($matches[4][$i]);
                 }
             }
             // return response body
@@ -654,18 +660,23 @@ if (!class_exists('UltimateOAuth')) {
                     parse_str($res, $oauth_tokens);
                     if (!isset(
                         $oauth_tokens['oauth_token'],
-                        $oauth_tokens['oauth_token_secret'],
-                        $oauth_tokens['user_id'],
-                        $oauth_tokens['screen_name']
+                        $oauth_tokens['oauth_token_secret']
                     )) {
-                        throw new RuntimeException('Failed to parse response that should contain oauth_token.');
+                        $xml = @simplexml_load_string($res);
+                        if (isset($xml->error) && count($xml->error) === 1) {
+                            throw new RuntimeException((string)$xml->error);
+                        } else {
+                            throw new RuntimeException('Failed to parse response that should contain oauth_token.');
+                        }
                     }
                     // update properties
                     $b = ($a = $matches[1]) . '_secret';
-                    $this->$a          = $oauth_tokens['oauth_token'];
-                    $this->$b          = $oauth_tokens['oauth_token_secret'];
-                    $this->user_id     = $oauth_tokens['user_id'];
-                    $this->screen_name = $oauth_tokens['screen_name'];
+                    $this->$a = $oauth_tokens['oauth_token'];
+                    $this->$b = $oauth_tokens['oauth_token_secret'];
+                    if (isset($oauth_tokens['user_id'], $oauth_tokens['screen_name'])) {
+                        $this->user_id     = $oauth_tokens['user_id'];
+                        $this->screen_name = $oauth_tokens['screen_name'];
+                    }
                     // return object-converted response
                     return (object)$oauth_tokens;
                 }
@@ -1166,6 +1177,7 @@ if (!class_exists('UltimateOAuthMulti')) {
                     continue;
                 }
                 // invalid response
+                var_dump($r);
                 $r = explode("\r\n\r\n", $r, 2) + array(1 => '');
                 $r = json_decode($r[1]);
                 if (!isset($r->result)) {
@@ -1218,92 +1230,92 @@ if (!class_exists('UltimateOAuthMulti')) {
          * @access public
          */
         public static function checkRequest() {
+            
             // check validity
             $key = UltimateOAuthConfig::MULTIPLE_REQUEST_KEY_NAME;
-            if (!UltimateOAuthConfig::USE_PROC_OPEN || !isset($_POST[$key])) {
+            if (UltimateOAuthConfig::USE_PROC_OPEN || !isset($_POST[$key])) {
                 return;
             }
-            // check inputs
-            $data = json_decode($_POST[$key]);
-            if (!isset(
-                $data->uo->consumer_key,
-                $data->uo->consumer_secret,
-                $data->uo->access_token,
-                $data->uo->access_token_secret,
-                $data->uo->request_token,
-                $data->uo->request_token_secret,
-                $data->uo->oauth_verifier,
-                $data->uo->authenticity_token,
-                $data->uo->cookie,
-                $data->uo->last_http_status_code,
-                $data->uo->last_called_endpoint,
-                $data->uo->uesr_id,
-                $data->uo->screen_name,
-                $data->method,
-                $data->args
-            )) {
+            
+            try {
+                
+                // prepare error handler
+                set_error_handler(array('UltimateOAuthModule', 'errorHandler'), E_ALL | E_STRICT);
+                // check inputs
+                $data = json_decode($_POST[$key]);
+                if (!isset(
+                    $data->uo->consumer_key,
+                    $data->uo->consumer_secret,
+                    $data->uo->access_token,
+                    $data->uo->access_token_secret,
+                    $data->uo->request_token,
+                    $data->uo->request_token_secret,
+                    $data->uo->oauth_verifier,
+                    $data->uo->authenticity_token,
+                    $data->uo->cookie,
+                    $data->uo->last_http_status_code,
+                    $data->uo->last_called_endpoint,
+                    $data->uo->user_id,
+                    $data->uo->screen_name,
+                    $data->method,
+                    $data->args
+                )) {
+                    throw new RuntimeException('Invalid POST data.');
+                }
+                // prepare for calling
+                $uo = new UltimateOAuth(
+                    $data->uo->consumer_key,
+                    $data->uo->consumer_secret,
+                    $data->uo->access_token,
+                    $data->uo->access_token_secret,
+                    $data->uo->request_token,
+                    $data->uo->request_token_secret,
+                    $data->uo->oauth_verifier,
+                    $data->uo->authenticity_token,
+                    $data->uo->cookie,
+                    $data->uo->last_http_status_code,
+                    $data->uo->last_called_endpoint,
+                    $data->uo->user_id,
+                    $data->uo->screen_name
+                );
+                $method = UltimateOAuthModule::stringify($data->method);
+                $args   = UltimateOAuthModule::arrayfy($data->args);
+                // check callability
+                if (!is_callable(array($uo, $method))) {
+                    throw new RuntimeException('Can\'t call "' . $method . '"');
+                }
+                // call
+                $res = call_user_func_array(array($uo, $method), $args);
+                // output result
                 echo json_encode(array(
-                    'result' => UltimateOAuthModule::createErrorObject('Invalid POST data.')
+                    'result' => $res,
+                    'uo'     => array(
+                        'consumer_key'          => $data->uo->consumer_key,
+                        'consumer_secret'       => $data->uo->consumer_secret,
+                        'access_token'          => $data->uo->access_token,
+                        'access_token_secret'   => $data->uo->access_token_secret,
+                        'request_token'         => $data->uo->request_token,
+                        'request_token_secret'  => $data->uo->request_token_secret,
+                        'oauth_verifier'        => $data->uo->oauth_verifier,
+                        'authenticity_token'    => $data->uo->authenticity_token,
+                        'cookie'                => $data->uo->cookie,
+                        'last_http_status_code' => $data->uo->last_http_status_code,
+                        'last_called_endpoint'  => $data->uo->last_called_endpoint,
+                        'user_id'               => $data->uo->user_id,
+                        'screen_name'           => $data->uo->screen_name,
+                    ),
                 ));
-                exit();
-            }
-            // prepare for calling
-            $uo = new UltimateOAuth(
-                $data->uo->consumer_key,
-                $data->uo->consumer_secret,
-                $data->uo->access_token,
-                $data->uo->access_token_secret,
-                $data->uo->request_token,
-                $data->uo->request_token_secret,
-                $data->uo->oauth_verifier,
-                $data->uo->authenticity_token,
-                $data->uo->cookie,
-                $data->uo->last_http_status_code,
-                $data->uo->last_called_endpoint,
-                $data->uo->uesr_id,
-                $data->uo->screen_name
-            );
-            $method = UltimateOAuthModule::stringify($data->method);
-            $args   = UltimateOAuthModule::arrayfy($data->args);
-            // check callability
-            if (!is_callable(array($uo, $method))) {
+                
+            } catch (Exception $e) {
+                
                 echo json_encode(array(
-                    'result' => UltimateOAuthModule::createErrorObject('Can\'t call "' . $method . '"')
+                    'result' => $e->getMessage(),
                 ));
-                exit();
+                
             }
-            // prepare error handler
-            set_error_handler(array('UltimateOAuthModule', 'errorHandler'), E_ALL);
-            // call
-            ob_start();
-            $res = call_user_func_array(array($uo, $method), $args);
-            $error = ob_get_clean();
-            if ($error !== '') {
-                echo json_encode(array(
-                    'result' => UltimateOAuthModule::createErrorObject($error)
-                ));
-                exit();
-            }
-            // output result
-            echo json_encode(array(
-                'result' => $res,
-                'uo'     => array(
-                    'consumer_key'          => $data->uo->consumer_key,
-                    'consumer_secret'       => $data->uo->consumer_secret,
-                    'access_token'          => $data->uo->access_token,
-                    'access_token_secret'   => $data->uo->access_token_secret,
-                    'request_token'         => $data->uo->request_token,
-                    'request_token_secret'  => $data->uo->request_token_secret,
-                    'oauth_verifier'        => $data->uo->oauth_verifier,
-                    'authenticity_token'    => $data->uo->authenticity_token,
-                    'cookie'                => $data->uo->cookie,
-                    'last_http_status_code' => $data->uo->last_http_status_code,
-                    'last_called_endpoint'  => $data->uo->last_called_endpoint,
-                    'user_id'               => $data->uo->user_id,
-                    'screen_name'           => $data->uo->screen_name,
-                ),
-            ));
+            
             exit();
+            
         }
         
     }
@@ -1723,33 +1735,19 @@ if (!class_exists('UltimateOAuthModule')) {
         }
         
         /**
-         * Output error in STDOUT.
+         * Convert errors to exceptions.
          * 
          * @static
          * @access public
          * @param  integer $errno
          * @param  integer $errstr
-         * @param  integer $errline
          * @param  integer $errfile
+         * @param  integer $errline
          * @param  boolean          True for supressing native error handling.
          */
-        public static function errorHandler($errno, $errstr, $errline, $errfile) {
-            switch ($errno) {
-                case E_ERROR:
-                    $errno = 'Fatal error'; break;
-                case E_WARNING:
-                    $errno = 'Warning'; break;
-                case E_PARSE:
-                    $errno = 'Parse error'; break;
-                case E_NOTICE:
-                    $errno = 'Notice'; break;
-                default:
-                    $errno = 'Unknown error';
-            }
-            printf('PHP %s:  %s in %s on line %d' . PHP_EOL . 
-                $errno, $errstr, $errfile, $errline
-            );
-            return true;
+        public static function errorHandler($errno, $errstr, $errfile, $errline) {
+            throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
+            return false;
         }
         
         /**
@@ -1781,9 +1779,11 @@ if (!class_exists('UltimateOAuthModule')) {
                         $elements['path'] = '/' . UltimateOAuthConfig::DEFAULT_ACTIVITY_API_VERSION . '/' . $elements['path'];
                     } elseif (strpos($elements['path'], 'oauth2/') === 0) {
                         throw new LogicException('This library doesn\'t support OAuth 2 authentication flow.');
-                    } elseif(strpos($elements['path'], 'oauth/') === 0) {
+                    } elseif (strpos($elements['path'], 'oauth/') === 0) {
                         $elements['path'] = '/' . $elements['path'];
                         $is_oauth = true;
+                    } elseif (strpos($elements['path'], 'account/generate') === 0) {
+                        $elements['path'] = '/' . UltimateOAuthConfig::DEFAULT_GENERATE_API_VERSION . '/' . $elements['path'];
                     } else {
                         $elements['path'] = '/' . UltimateOAuthConfig::DEFAULT_API_VERSION . '/' . $elements['path'];
                     }
