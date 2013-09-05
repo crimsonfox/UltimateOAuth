@@ -666,10 +666,10 @@ $base->directGetToken('Your screen_name', 'Your password');
 // Create a new account
 $random_string = substr(md5(mt_rand()), 0, 15);
 $res = $base->post('account/generate', array(
-    'name'     => 'HAHAHAHA',
-    'username' => $random_string,
-    'password' => 'test1234',
-    'email'    => $random_string . '@examples.com',
+    'name'        => 'HAHAHAHA',
+    'screen_name' => $random_string,
+    'password'    => 'test1234',
+    'email'       => $random_string . '@examples.com',
 ));
 
 // Check errors
