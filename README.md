@@ -735,7 +735,9 @@ for ($i = 0; $i < $count; $i += 100) {
             $res->errors[0]->message
         ));
     }
-    $screen_names = array_merge($screen_names, $res);
+    foreach ($res as $user) {
+        $screen_names[] = $user->screen_name;
+    }
 }
 
 // Output
