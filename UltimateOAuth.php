@@ -1,1172 +1,1181 @@
 <?php
 
-/*************************************************/
-/***************** UltimateOAuth *****************/
-/*************************************************/
-
-/* A highly advanced Twitter library in PHP.
+/**
+ * UltimateOAuth
  * 
- * @Version: 5.1.7
- * @Author : CertaiN
- * @License: BSD 2-Clause
- * @GitHub : http://github.com/certainist/UltimateOAuth
- * 
+ * A highly advanced Twitter library in PHP.
  * Requires PHP **5.2.0** or later.
  * Not depends on **cURL**.
  * Not depends on any other files.
  * Supports both UNIX and Windows.
+ * 
+ * @Version 5.2.0
+ * @Author  CertaiN
+ * @License BSD 2-Clause
+ * @GitHub  http://github.com/certainist/UltimateOAuth
  */
- 
- 
- 
- 
-/*  
- *  Configuration
+
+/**
+ * You have to configure these constants.
+ * 
+ * ****************************
+ * ****************************
+ * ****** VERY IMPORTANT ******
+ * ****************************
+ * ****************************
  *
- ******************************
- ******************************
- ******* VERY IMPORTANT *******
- ******************************
- ******************************
- */ 
-interface UltimateOAuthConfig {
+ * @interface
+ */
+if (!interface_exists('UltimateOAuthConfig')) {
     
-    /*
-     *  Multiple request settings.
-     *   
-     *   TRUE  - use proc_open() - You should select TRUE as long as your server allows.
-     *   FALSE - use fsockopen() - For the environment that proc_open() is disabled for security reasons. 
-     *
-     */
-    const USE_PROC_OPEN = true;
-    
-    // Used if USE_PROC_OPEN == TRUE
-    const PHP_COMMAND = 'php';
-    
-    // Used if USE_PROC_OPEN == FALSE
-    const FULL_URL_TO_THIS_FILE     = ''; /* You have to fill here! */
-    const MULTIPLE_REQUEST_KEY_NAME = '____ULTIMATE_OAUTH_MULTIPLE_REQUEST_KEY____';
-    
-    /*
-     *  About request URL.
-     */
-    const DEFAULT_SCHEME               = 'https'           ;
-    const DEFAULT_HOST                 = 'api.twitter.com' ;
-    const DEFAULT_API_VERSION          = '1.1'             ;
-    const DEFAULT_ACTIVITY_API_VERSION = '1.1'             ;
-    
-    /*
-     *  User-Agent for requesting.
-     */
-    const USER_AGENT = 'UltimateOAuth';
-
-}
- 
- 
- 
- 
-/*  
- *  UltimateOAuth - Main class.
- *                  If you want to avoid API limits for GET endpoints,
- *                  use UltimateOAuthRotate class instead.
- */ 
-class UltimateOAuth {
-
-    /********************/
-    /**** Properties ****/
-    /********************/
-    
-    private $consumer_key;
-    private $consumer_secret;
-    private $access_token;
-    private $access_token_secret;
-    private $request_token;
-    private $request_token_secret;
-    private $authenticity_token;
-    private $oauth_verifier;
-    private $cookie;
-    private $last_http_status_code;
-    private $last_called_endpoint;
-    private $user_id;
-    private $screen_name;
-    
-    /***************************/
-    /**** Interface Methods ****/
-    /***************************/
-    
-    /*
-     *  (UltimateOAuth) __construct() - Create a new UltimateOAuth instance.
-     */
-    public function __construct(
-        $consumer_key          = '', // Consumer Key    (Required)  
-        $consumer_secret       = '', // Consumer Secret (Required)
-        $access_token          = '', // Access Token        (Not necessary if you authenticate/authorize later)
-        $access_token_secret   = '', // Access Token Secret (Not necessary if you authenticate/authorize later)
-        /*
-         * Don't use args below
+    interface UltimateOAuthConfig {
+        
+        /**
+         * Multiple request settings.
+         *  
+         * @constant boolean USE_PROC_OPEN 
+         *   TRUE  - use proc_open() - You should select TRUE as long as your server allows.
+         *   FALSE - use fsockopen() - For the environment that proc_open() is disabled for security reasons. 
          */
-        $request_token         = '',
-        $request_token_secret  = '',
-        $oauth_verifier        = '',
-        $authenticity_token    = '',
-        $cookie                = array(),
-        $last_http_status_code = 0,
-        $last_called_endpoint  = '',
-        $user_id               = '',
-        $screen_name           = ''
-    ) {
-        // Validate arguments and set them as properties
-        $this->consumer_key          = UltimateOAuthModule::stringify($consumer_key)               ;
-        $this->consumer_secret       = UltimateOAuthModule::stringify($consumer_secret)            ;
-        $this->access_token          = UltimateOAuthModule::stringify($access_token)               ;
-        $this->access_token_secret   = UltimateOAuthModule::stringify($access_token_secret)        ;
-        $this->request_token         = UltimateOAuthModule::stringify($request_token)              ;
-        $this->request_token_secret  = UltimateOAuthModule::stringify($request_token_secret)       ;
-        $this->oauth_verifier        = UltimateOAuthModule::stringify($oauth_verifier)             ;
-        $this->authenticity_token    = UltimateOAuthModule::stringify($authenticity_token)         ;
-        $this->cookie                = UltimateOAuthModule::arrayfy($cookie)                       ;
-        $this->last_http_status_code = (int)UltimateOAuthModule::stringify($last_http_status_code) ;
-        $this->last_called_endpoint  = UltimateOAuthModule::stringify($last_called_endpoint)       ;
-        $this->user_id               = UltimateOAuthModule::stringify($user_id)                    ;
-        $this->screen_name           = UltimateOAuthModule::stringify($screen_name)                ;
+        const USE_PROC_OPEN = true;
+        
+        /**
+         * Used if USE_PROC_OPEN == TRUE.
+         *
+         * @constant string PHP_COMMAND
+         *   proc_open() use this command for multiple processing.
+         */
+        const PHP_COMMAND = 'php';
+        
+        /**
+         * Used if USE_PROC_OPEN == FALSE.
+         * 
+         * @constant string FULL_URL_TO_THIS_FILE
+         *   fsockopen() use this URL for multiple processing.
+         *   You have to put this file in the public_html.
+         * @constant string MULTIPLE_REQUEST_KEY_NAME
+         *   fsockopen() use this name as $_POST key name.
+         */
+        const FULL_URL_TO_THIS_FILE     = ''; /* You have to fill here! */
+        const MULTIPLE_REQUEST_KEY_NAME = '____ULTIMATE_OAUTH_MULTIPLE_REQUEST_KEY____';
+        
+        /**
+         * About request URL.
+         * 
+         * @constant string DEFAULT_SCHEME               This must be "https" now.
+         * @constant string DEFAULT_HOST                 This must be "api.twitter.com" now.
+         * @constant string DEFAULT_API_VERSION          This must be "1.1" now.
+         * @constant string DEFAULT_ACTIVITY_API_VERSION This should be "1.1" now.
+         */
+        const DEFAULT_SCHEME               = 'https';
+        const DEFAULT_HOST                 = 'api.twitter.com' ;
+        const DEFAULT_API_VERSION          = '1.1';
+        const DEFAULT_ACTIVITY_API_VERSION = '1.1';
+        
+        /**
+         * User-Agent for requesting.
+         * 
+         * @constant string USER_AGENT
+         */
+        const USER_AGENT = 'UltimateOAuth';
+        
     }
     
-    /*
-     *  (stdClass | array) get() - Wrapper for OAuthRequest.
-     */
-    public function get(
-        $endpoint                , /*  Endpoint. Generally, it is returned as stdClass object.
-                                    *    Example: "users/show"
-                                    *  On some endpoints, it is returned as array if successful.
-                                    *    Example: "statuses/home_timeline"
-                                    */
-        $params        = array()   // Parameters. Associative array or query string.
-    ) {
-        return $this->OAuthRequest($endpoint, 'GET', $params, true);
-    }
-    
-    /*
-     *  (stdClass | void) post() - Wrapper for OAuthRequest.
-     */
-    public function post(
-        $endpoint                , /*  Endpoint. Generally, it is returned as stdClass object.
-                                    *    Example: "statuses/update"
-                                    */
-        $params        = array() , // Parameters. Associative array or query string.
-        $wait_response = true      // If you don't need to get a response, set it to FALSE.
-    ) {
-        return $this->OAuthRequest($endpoint, 'POST', $params, $wait_response);
-    }
-    
-    /*
-     *  (stdClass | array | void) OAuthRequest() - Used for requests mainly.
-     */ 
-    public function OAuthRequest(
-        $endpoint                , /*  Endpoint. Generally, it is returned as stdClass object.
-                                    *    Example: "users/show"
-                                    *  On some endpoints, it is returned as array if successful.
-                                    *    Example: "statuses/home_timeline"
-                                    */
-        $method        = 'GET'   , // Request type. Select "GET" or "POST".
-        $params        = array() , // Parameters. Associative array or query string.
-        $wait_response = true      // If you don't need to get a response, set it to FALSE.
-    ) {
-        // Validate parameters
-        self::modParameters($params);
-        return $this->request($endpoint, $method, $params, false, $wait_response, false);
-    }
-    
-    /*
-     *  (stdClass | void) OAuthRequestMultipart() - Used for multipart POST requests.
-     */
-    public function OAuthRequestMultipart(
-        $endpoint                , /*  Endpoint. Generally, it is returned as stdClass object.
-                                    *    Example: "statuses/update_with_media"
-                                    */
-        $params        = array() , // Parameters. Associative array.
-        $wait_response = true      // If you don't need to get a response, set it to FALSE.
-    ) {
-        // Validate parameters
-        self::modParameters($params);
-        return $this->request($endpoint, 'POST', $params, true, $wait_response, false);
-    }
-    
-    /*
-     *  (string) getAuthorizeURL() - Return URL for authorization.
-     */
-    public function getAuthorizeURL($force_login = false) {
-        return sprintf('%s://%s/oauth/authorize?oauth_token=%s%s',
-            UltimateOAuthConfig::DEFAULT_SCHEME  ,
-            UltimateOAuthConfig::DEFAULT_HOST    ,
-            $this->request_token                 ,
-            $force_login ? '&force_login=1' : ''  
-        );
-    }
-    
-    /*
-     *  (string) getAuthenticateURL() - Return URL for authentication.
-     */
-    public function getAuthenticateURL($force_login = false) {
-        return sprintf('%s://%s/oauth/authenticate?oauth_token=%s%s',
-            UltimateOAuthConfig::DEFAULT_SCHEME  ,
-            UltimateOAuthConfig::DEFAULT_HOST    ,
-            $this->request_token                 ,
-            $force_login ? '&force_login=1' : ''  
-        );
-    }
-    
-    /*
-     *  (stdClass) directGetToken() - Used for para-xAuth authorization.
-     *                                Return a stdClass object that has the following structure:
-     *                                 
-     *                                 (string) $response->oauth_token
-     *                                 (string) $response->oauth_token_secret
-     */
-    public function directGetToken(
-        $username, // screen_name or E-mail address.
-        $password  // password.
-    ) {
-    
-        try {
-            
-            // Validate arguments
-            $username = UltimateOAuthModule::stringify($username);
-            $password = UltimateOAuthModule::stringify($password);
+}
 
-            // Get request_token
-            $res = $this->post('oauth/request_token');
-            if (isset($res->errors)) {
-                return UltimateOAuthModule::createErrorObject(
-                    $res->errors[0]->message,
-                    $this->last_http_status_code
-                );
+/**
+ * UltimateOAuth
+ *
+ * A main class.
+ * If you want to avoid API limits for GET endpoints,
+ * use UltimateOAuthRotate class instead.
+ */
+if (!class_exists('UltimateOAuth')) {
+    
+    class UltimateOAuth {
+        
+        /********************/
+        /**** Properties ****/
+        /********************/
+        
+        private $consumer_key;
+        private $consumer_secret;
+        private $access_token;
+        private $access_token_secret;
+        private $request_token;
+        private $request_token_secret;
+        private $authenticity_token;
+        private $oauth_verifier;
+        private $cookie;
+        private $last_http_status_code;
+        private $last_called_endpoint;
+        private $user_id;
+        private $screen_name;
+        
+        /***************************/
+        /**** Interface Methods ****/
+        /***************************/
+        
+        /**
+         * Create a new UltimateOAuth instance.
+         * 
+         * @access public 
+         * @param  string [$consumer_key]        A random official one is used when omitted. 
+         * @param  string [$consumer_secret]     A random official one is used when omitted. 
+         * @param  string [$access_token]        Necessary if you don't authenticate/authorize later.
+         * @param  string [$access_token_secret] Necessary if you don't authenticate/authorize later.
+         * 
+         * Other arguments are only internally used.
+         */
+        public function __construct(
+            $consumer_key,
+            $consumer_secret,
+            $access_token          = '',
+            $access_token_secret   = '',
+            $request_token         = '',
+            $request_token_secret  = '',
+            $oauth_verifier        = '',
+            $authenticity_token    = '',
+            $cookie                = array(),
+            $last_http_status_code = 0,
+            $last_called_endpoint  = '',
+            $user_id               = '',
+            $screen_name           = ''
+        ) {
+            if (func_get_args() < 2) {
+                // use random official keys
+                $key = array_rand($officials = UltimateOAuthModule::getOfficialKeys());
+                $this->consumer_key    = $officials[$key]['consumer_key'];
+                $this->consumer_secret = $officials[$key]['consumer_secret'];
+            } else {
+                // validate arguments and set them as properties
+                $this->consumer_key          = UltimateOAuthModule::stringify($consumer_key);
+                $this->consumer_secret       = UltimateOAuthModule::stringify($consumer_secret);
+                $this->access_token          = UltimateOAuthModule::stringify($access_token);
+                $this->access_token_secret   = UltimateOAuthModule::stringify($access_token_secret);
+                $this->request_token         = UltimateOAuthModule::stringify($request_token);
+                $this->request_token_secret  = UltimateOAuthModule::stringify($request_token_secret);
+                $this->oauth_verifier        = UltimateOAuthModule::stringify($oauth_verifier);
+                $this->authenticity_token    = UltimateOAuthModule::stringify($authenticity_token);
+                $this->cookie                = UltimateOAuthModule::arrayfy($cookie);
+                $this->last_http_status_code = (int)$last_http_status_code;
+                $this->last_called_endpoint  = UltimateOAuthModule::stringify($last_called_endpoint);
+                $this->user_id               = UltimateOAuthModule::stringify($user_id);
+                $this->screen_name           = UltimateOAuthModule::stringify($screen_name);
             }
+        }
+        
+        /**
+         * A wrapper method for OAuthRequest().
+         * 
+         * @access public 
+         * @param  string $endpoint Example: "users/show"
+         * @param  mixed  [$params] An associative array or a urlencoded or non-urlencoded query string.
+         * @return mixed            A response through json_deocde().
+         *                          Generally returned as a stdClass object.
+         *                          Some endpoints such as "statuses/home_timeline" returns an array if successful.
+         * @see                     https://dev.twitter.com/docs/api/1.1
+         */
+        public function get($endpoint, $params = array()) {
+            return $this->OAuthRequest($endpoint, 'GET', $params, true);
+        }
+        
+        /**
+         * A wrapper method for OAuthRequest().
+         * 
+         * @access public 
+         * @param  string  $endpoint        Example: "statuses/update"
+         * @param  mixed   [$params]        An associative array or a urlencoded or non-urlencoded query string.
+         * @param  boolean [$wait_response] Whether synchronous or not. True as default.
+         * @return mixed                    A response through json_deocde().
+         *                                  Generlally returned as a stdClass object.
+         *                                  The case $wait_response is disabled returns NULL. 
+         * @see                             https://dev.twitter.com/docs/api/1.1
+         */
+        public function post($endpoint, $params = array(), $wait_response = true) {
+            return $this->OAuthRequest($endpoint, 'POST', $params, $wait_response);
+        }
+        
+        /**
+         * Multipart post requests.
+         * postMultipart() and OAuthRequestMultipart are completely equal.
+         * 
+         * @access public 
+         * @param  string  $endpoint        Example: "statuses/update_with_media"
+         * @param  mixed   [$params]        An associative array or a urlencoded or non-urlencoded query string.
+         * @param  boolean [$wait_response] Whether synchronous or not. True as default.
+         * @return mixed                    A response through json_deocde().
+         *                                  Generlally returned as a stdClass object.
+         *                                  The case $wait_response is disabled returns NULL. 
+         * @see                             https://dev.twitter.com/docs/api/1.1
+         */
+        public function postMultipart($endpoint, $params = array(), $wait_response = true) {
+            // validate arguments
+            self::modParameters($params);
+            return $this->request($endpoint, 'POST', $params, true, $wait_response, false);
+        }
+        public function OAuthRequestMultipart($endpoint, $params = array(), $wait_response = true) {
+            // validate arguments
+            self::modParameters($params);
+            return $this->request($endpoint, 'POST', $params, true, $wait_response, false);
+        }
+        
+        /**
+         * Used for requests mainly.
+         * 
+         * @access public 
+         * @param  string  $endpoint        Example: "users/show"
+         * @param  string  [$method]        "POST" or "GET". "GET" as default.
+         * @param  mixed   [$params]        An associative array or a urlencoded or non-urlencoded query string.
+         * @param  boolean [$wait_response] Whether synchronous or not. True as default.
+         * @return mixed                    A response through json_deocde().
+         *                                  Generlally returned as a stdClass object.
+         *                                  Some endpoints such as "statuses/home_timeline" returns an array if successful.
+         *                                  The case $wait_response is disabled returns NULL. 
+         * @see                             https://dev.twitter.com/docs/api/1.1
+         */
+        public function OAuthRequest(
+            $endpoint, $method = 'GET', $params = array(), $wait_response = true) {
+            // validate arguments
+            self::modParameters($params);
+            return $this->request($endpoint, $method, $params, false, $wait_response, false);
+        }
+        
+        /**
+         * @access public 
+         * @param  boolean [$force_login]
+         * @return string                 URL for authorization.
+         */
+        public function getAuthorizeURL($force_login = false) {
+            return sprintf('%s://%s/oauth/authorize?oauth_token=%s%s',
+                UltimateOAuthConfig::DEFAULT_SCHEME,
+                UltimateOAuthConfig::DEFAULT_HOST,
+                $this->request_token,
+                $force_login ? '&force_login=1' : ''
+            );
+        }
+        
+        /**
+         * @access public 
+         * @param  boolean [$force_login]
+         * @return string                 URL for authentication.
+         */
+        public function getAuthenticateURL($force_login = false) {
+            return sprintf('%s://%s/oauth/authenticate?oauth_token=%s%s',
+                UltimateOAuthConfig::DEFAULT_SCHEME,
+                UltimateOAuthConfig::DEFAULT_HOST,
+                $this->request_token,
+                $force_login ? '&force_login=1' : ''  
+            );
+        }
+        
+        /**
+         * Para-xAuth authorization.
+         * Don't use this method too much,
+         * but reuse authorized UltimateOAuth objects by using serialize() and unserialize().
+         * 
+         * @access public 
+         * @param  string   $username screen_name or E-mail address.
+         * @param  string   $password 
+         * @return stdClass           A stdClass object that has the following structure:
+         *                             (string) $response->oauth_token
+         *                             (string) $response->oauth_token_secret
+         */
+        public function directGetToken($username, $password) {
+            
+            try {
                 
-            // Get authorize URL
-            $url = $this->getAuthorizeURL(true);
-            
-            // Get authenticity_token
-            $res = $this->request($url, 'GET', array(), false, true, true);
-            $pattern = '@<input name="authenticity_token" type="hidden" value="([^"]++)" />@';
-            if ($res === false) {
-                return UltimateOAuthModule::createErrorObject(
-                    'Connection failed when fetching authenticity_token.',
-                    -1
+                // validate arguments
+                $username = UltimateOAuthModule::stringify($username);
+                $password = UltimateOAuthModule::stringify($password);
+                // get request_token
+                $res = $this->post('oauth/request_token');
+                if (isset($res->errors)) {
+                    return UltimateOAuthModule::createErrorObject(
+                        $res->errors[0]->message,
+                        $this->last_http_status_code
+                    );
+                }
+                // get authorize URL
+                $url = $this->getAuthorizeURL(true);
+                // Get authenticity_token
+                $res = $this->request($url, 'GET', array(), false, true, true);
+                $pattern = '@<input name="authenticity_token" type="hidden" value="([^"]++)" />@';
+                if (!preg_match($pattern, $res, $matches)) {
+                    return UltimateOAuthModule::createErrorObject(
+                        'Failed to fetch authenticity_token.',
+                        -1
+                    );
+                }
+                // get oauth_verifier
+                $params = array(
+                    'authenticity_token'         => $matches[1],
+                    'oauth_token'                => $this->request_token,
+                    'force_login'                => '1',
+                    'session[username_or_email]' => $username,
+                    'session[password]'          => $password,
                 );
-            }
-            if (!preg_match($pattern, $res, $matches)) {
+                $res = $this->request($url, 'POST', $params, false, true, true);
+                $pattern = '@oauth_verifier=([^"]++)"|<code>([^<]++)</code>@';
+                if (!preg_match($pattern, $res, $matches)) {
+                    return UltimateOAuthModule::createErrorObject(
+                        'Wrong username or password.',
+                        -1
+                    );
+                }
+                $this->oauth_verifier = !isset($matches[2]) ? $matches[1] : $matches[2];
+                // get access_token
+                $res = $this->post('oauth/access_token', array(
+                    'oauth_verifier' => $this->oauth_verifier,
+                ));
+                if (isset($res->errors)) {
+                    return UltimateOAuthModule::createErrorObject(
+                        $res->errors[0]->message,
+                        $this->last_http_status_code
+                    );
+                }
+                // return an object
+                return $res;
+                
+            } catch (Exception $e) {
+                
+                // return an error object
                 return UltimateOAuthModule::createErrorObject(
-                    'Failed to fetch authenticity_token.',
-                    -1
+                    $e->getMessage(),
+                    $e->getCode()
                 );
+                
             }
-            
-            // Get oauth_verifier
-            $params = array(
-                'authenticity_token'         => $matches[1],
-                'oauth_token'                => $this->request_token,
-                'force_login'                => '1',
-                'session[username_or_email]' => $username,
-                'session[password]'          => $password,
-            );
-            $res = $this->request($url, 'POST', $params, false, true, true);
-            if ($res === false) {
-                return UltimateOAuthModule::createErrorObject(
-                    'Connection failed when fetching oauth_verifier.',
-                    -1
-                );
+        
+        }
+        
+        /**************************/
+        /**** Internal Methods ****/
+        /**************************/
+        
+        /**
+         * For read-only properties.
+         * 
+         * @magic
+         * @access public 
+         * @param  string $name
+         * @return mixed
+         */
+        public function __get($name) {
+            if (!isset($this->$name)) {
+                throw new InvalidArgumentException("Undefined property: {$name}");
             }
-            $pattern = '@oauth_verifier=([^"]++)"|<code>([^<]++)</code>@';
-            if (!preg_match($pattern, $res, $matches)) {
-                return UltimateOAuthModule::createErrorObject(
-                    'Wrong username or password.',
-                    -1
-                );
+            return $this->$name;
+        }
+        
+        /**
+         * Validate and modify parameters as appropriate formats.
+         * 
+         * @access private 
+         * @static
+         * @param  mixed   &$params
+         */
+        private static function modParameters(&$params) {
+            if (is_string($params)) {
+                // parse query string
+                parse_str($params, $new);
+            } elseif (is_object($params)) {
+                // convert object to array
+                $new = (array)$params;
+            } elseif (!is_array($params)) {
+                // invalid params
+                $new = array();
+            } else {
+                $new = $params;
             }
-            $this->oauth_verifier = !empty($matches[1]) ? $matches[1] : $matches[2];
-            
-            // Get access_token
-            $res = $this->post('oauth/access_token', array(
-                'oauth_verifier' => $this->oauth_verifier,
-            ));
-            if (isset($res->errors)) {
-                return UltimateOAuthModule::createErrorObject(
-                    $res->errors[0]->message,
-                    $this->last_http_status_code
-                );
-            }
-            
-            // Return an object
-            return $res;
-        
-        } catch (Exception $e) {
-            
-            // Return an error object
-            return UltimateOAuthModule::createErrorObject(
-                $e->getMessage(),
-                $e->getCode()
-            );
-            
-        }
-    
-    }
-    
-    /**************************/
-    /**** Internal Methods ****/
-    /**************************/
-    
-    /*
-     *  (mixed) __get() - For read-only properties.
-     */
-    public function __get($name) {
-        if (!isset($this->$name)) {
-            throw new InvalidArgumentException("Undefined property: {$name}");
-        }
-        return $this->$name;
-    }
-    
-    /*
-     *  (void) modParameters() - Validate and modify parameters as appropriate formats.
-     */
-    private static function modParameters(&$params) {
-        
-        if (is_string($params)) {
-            // Parse query string
-            parse_str($params, $new);
-        } elseif (is_object($params)) {
-            // Convert object to array
-            $new = (array)$params;
-        } elseif (!is_array($params)) {
-            // Invalid params
-            $new = array();
-        } else {
-            $new = $params;
-        }
-        
-        $ret = array();
-        foreach ($new as $key => $value) {
-            // Skip NULL
-            if ($value === null) {
-                continue;
-            }
-            // Convert FALSE to string "0"
-            if ($value === false) {
-                $value = '0';
-            }
-            // Stringification
-            $ret[$key] = UltimateOAuthModule::stringify($value);
-        }
-        $params = $ret;
-        
-    }
-    
-    /*
-     *  (string | void) connect() - Send socket request.
-     */
-    private function connect($host, $scheme, $request, $wait_response) {
-        
-        // Determine port
-        if ($scheme === 'https') {
-            $host = 'ssl://' . $host; // When using "https://"
-            $port = 443;
-        } else {
-            $port = 80;
-        }
-        
-        // Open socket
-        $fp = @fsockopen($host, $port, $errno, $errstr, 5);
-        if (!$fp) {
-            throw new RuntimeException("Failed to connect to {$host}:{$port}");
-        }
-        
-        // Send request
-        if (fwrite($fp, $request) === false) {
-            if ($fp) {
-                fclose($fp);
-            }
-            throw new RuntimeException('Failed to send request.');
-        }
-        
-        // Get response
-        if ($wait_response) {
-            $res = explode("\r\n\r\n", stream_get_contents($fp), 2);
-            if (!isset($res[1]) || !preg_match('@^HTTP/1\\.0 (\\d++)@', $res[0], $matches)) {
-                throw new RuntimeException('Invalid response.');
-            }
-            $this->last_http_status_code = (int)$matches[1];
-        }
-        
-        // Close socket
-        fclose($fp);
-        
-        // Return void if response is not necessary
-        if (!$wait_response) {
-            return;
-        }
-            
-        // Set cookies
-        if (preg_match_all('/^Set-Cookie:(.+?)(?:;|$)/mi', $res[0], $matches)) {
-            foreach ($matches[1] as $match) {
-                $pair = explode('=', trim($match),2);
-                if (!isset($pair[1])) {
+            $ret = array();
+            foreach ($new as $key => $value) {
+                // skip NULL
+                if ($value === null) {
                     continue;
                 }
-                $this->cookie[$pair[0]] = $pair[1];
+                // convert FALSE to string "0"
+                if ($value === false) {
+                    $value = '0';
+                }
+                // stringification
+                $ret[$key] = UltimateOAuthModule::stringify($value);
             }
+            $params = $ret;
         }
         
-        // Return response body
-        return $res[1];
-        
-    }
-    
-    /*
-     *  (stdClass | array | void) request() - HTTP request.
-     */
-    private function request($uri, $method, $params, $multipart, $wait_response, $scraping) {
-        
-        try {
-            
-            // Initialize information of last API call
-            $this->last_http_status_code = -1;
-            $this->last_called_endpoint  = '';
-            
-            // Validate arguments
-            $uri    = UltimateOAuthModule::stringify($uri);
-            $method = UltimateOAuthModule::stringify($method);
-            $method = strtoupper($method);
-            if ($multipart && ($method !== 'POST' || $scraping)) {
-                throw new LogicException('Multipart requests are supported only on POST.');
+        /**
+         * Send a socket request.
+         * 
+         * @access private 
+         * @param  string   $host
+         * @param  string   $scheme
+         * @param  string   $request
+         * @param  boolean  $wait_response
+         * @param  stdClass [$xauth_info]
+         * @return mixed
+         */
+        private function connect($host, $scheme, $request, $wait_response, &$xauth_info) {
+            // determine port
+            if ($scheme === 'https') {
+                $host = 'ssl://' . $host; // when using "https://"
+                $port = 443;
+            } else {
+                $port = 80;
             }
-            
-            // Parse uri
-            $elements = UltimateOAuthModule::parse_uri($uri);
-            
-            // Combine parameters
-            parse_str($elements['query'], $temp);
-            $params += $temp;
-            
-            // Set oauth_verifier
-            if (
-                $elements['path'] === '/oauth/access_token' &&
-                isset($params['oauth_verifier'])
-            ) {
-                $this->oauth_verifier = UltimateOAuthModule::stringify($params['oauth_verifier']);
-                unset($params['oauth_verifier']);
+            // open socket
+            $fp = @fsockopen($host, $port, $errno, $errstr, 5);
+            if (!$fp) {
+                throw new RuntimeException("Failed to connect to {$host}:{$port}");
             }
+            // send request
+            if (fwrite($fp, $request) === false) {
+                fclose($fp);
+                throw new RuntimeException('Failed to send request.');
+            }
+            // get response
+            if ($wait_response) {
+                $res = explode("\r\n\r\n", stream_get_contents($fp), 2) + array(1 => null);
+                list(, $code) = explode(' ', $res[0], 3) + array(1 => '');
+                if ($res[1] === null || !ctype_digit($code)) {
+                    throw new RuntimeException('Invalid response.');
+                }
+                $this->last_http_status_code = (int)$code;
+            }
+            // close socket
+            fclose($fp);
+            // return NULL if response is not necessary
+            if (!$wait_response) {
+                return;
+            }
+            // set cookies and xAuth information
+            $names = implode('|', array(
+                '(set-cookie)',
+                '(x-twitter-new-account-oauth-access-token)',
+                '(x-twitter-new-account-oauth-secret)',
+            ));
+            $pattern = "/^(?:{$names}):(.+?)(?:;|$)/mi";
+            if (preg_match_all($pattern, $res[0], $matches)) {
+                $matches = array_map('array_filter', $matches, array_fill(0, 4, 'strlen'));
+                foreach ($matches[1] as $i => $v) {
+                    $pair = explode('=', trim($matches[4][$i]), 2) + array(1 => '');
+                    $this->cookie[$pair[0]] = $pair[1];
+                }
+                foreach ($matches[2] as $i => $v) {
+                    if (!is_object($xauth_info)) {
+                        $xauth_info = new stdClass;
+                    }
+                    $xauth_info->access_token = $matches[4][$i];
+                }
+                foreach ($matches[3] as $i => $v) {
+                    if (!is_object($xauth_info)) {
+                        $xauth_info = new stdClass;
+                    }
+                    $xauth_info->access_token_secret = $matches[4][$i];
+                }
+            }
+            // return response body
+            return $res[1];
+        }
+        
+        /**
+         * HTTP request.
+         *
+         * @access private 
+         * @param  string  $uri
+         * @param  string  $method
+         * @param  string  $request
+         * @param  boolean $wait_response
+         * @return mixed
+         */
+        private function request($uri, $method, $params, $multipart, $wait_response, $scraping) {
             
-            if (!$scraping) {
+            try {
                 
-                if (!$multipart) {
-                    
-                    $_params = array();
+                // initialize information of last API call
+                $this->last_http_status_code = -1;
+                $this->last_called_endpoint  = '';
+                // validate arguments
+                $uri    = UltimateOAuthModule::stringify($uri);
+                $method = UltimateOAuthModule::stringify($method);
+                $method = strtoupper($method);
+                // parse uri
+                $elements = UltimateOAuthModule::parseUri($uri);
+                // combine parameters
+                parse_str($elements['query'], $temp);
+                $params += $temp;
+                // set oauth_verifier
+                if (
+                    $elements['path'] === '/oauth/access_token' &&
+                    isset($params['oauth_verifier'])
+                ) {
+                    $this->oauth_verifier = UltimateOAuthModule::stringify($params['oauth_verifier']);
+                    unset($params['oauth_verifier']);
+                }
+                if (!$scraping) {
+                    if (!$multipart) {
+                        $_params = array();
+                        foreach ($params as $key => $value) {
+                            if (strpos($key, '@') === 0) {
+                                // convert filenames to file binaries
+                                $value = UltimateOAuthModule::stringify($value);
+                                if ($value === '') {
+                                    throw new InvalidArgumentException("Filename is empty.");
+                                }
+                                if (!is_file($value)) {
+                                    throw new InvalidArgumentException("File \"{$value}\" not found.");
+                                }
+                                // set base64-encoded binaries
+                                $_params[substr($key, 1)] = base64_encode(@file_get_contents($value));
+                            } else {
+                                $_params[$key] = $value;
+                            }
+                        }
+                        $params = $_params;
+                        unset($_params);
+                    }
+                    // get query string for OAuth authorization
+                    $query = $this->getQueryString(
+                        $elements['scheme'] . '://' . $elements['host'] . $elements['path'],
+                        $elements['path'],
+                        $method,
+                        $params,
+                        $multipart
+                    );
+                } else {
+                    $query = http_build_query($params, '', '&');
+                }
+                // build path
+                if ($method === 'GET') {
+                    $path = $elements['path'] . '?' . $query;
+                } else {
+                    $path = $elements['path'];
+                }
+                // build header lines
+                $ua = UltimateOAuthConfig::USER_AGENT;
+                $lines = array(
+                    "{$method} {$path} HTTP/1.0",
+                    "Host: {$elements['host']}",
+                    "User-Agent: {$ua}",
+                    "Connection: Close",
+                    "\r\n",
+                );
+                // add cookies
+                if ($this->cookie) {
+                    array_splice($lines, -1, 0, array(
+                        'Cookie: ' . implode('; ', UltimateOAuthModule::pairize($this->cookie)),
+                    ));
+                }
+                if ($multipart) {
+                    // generate boundary
+                    $boundary = '--------------' . sha1(microtime());
+                    // build contents lines
+                    $cts_lines = array();
                     foreach ($params as $key => $value) {
+                        $cts_lines[] = '--' . $boundary;
+                        // convert filenames to file binaries
                         if (strpos($key, '@') === 0) {
-                            // Convert file names to file binaries
                             $value = UltimateOAuthModule::stringify($value);
-                            if ($value !=='0' && !$value) {
+                            if ($value === '') {
                                 throw new InvalidArgumentException("Filename is empty.");
                             }
                             if (!is_file($value)) {
                                 throw new InvalidArgumentException("File \"{$value}\" not found.");
                             }
-                            // Base64-encode binaries
-                            $_params[substr($key, 1)] = base64_encode(@file_get_contents($value));
+                            $is_file = true;
+                            $disposition = sprintf('form-data; name="%s"; filename="%s"',
+                                substr($key, 1),
+                                md5(mt_rand())
+                            );
                         } else {
-                            $_params[$key] = $value;
+                            $is_file = false;
+                            $disposition = sprintf('form-data; name="%s"', $key);
                         }
-                    }
-                    $params = $_params;
-                    unset($_params);
-                    
-                }
-                
-                // Get query string for OAuth authorization
-                $query = $this->getQueryString(
-                    $elements['scheme'] . '://' . $elements['host'] . $elements['path'],
-                    $elements['path'],
-                    $method,
-                    $params,
-                    $multipart
-                );
-                
-            } else {
-            
-                $query = http_build_query($params, '', '&');
-            
-            }
-            
-            // Build path
-            if ($method === 'GET' && !$multipart) {
-                $path = $elements['path'] . '?' . $query;
-            } else {
-                $path = $elements['path'];
-            }
-                
-            // Build header lines
-            $lines = array(
-                sprintf('%s %s HTTP/1.0', strtoupper($method), $path),
-                'Host: '       . $elements['host']                   ,
-                'User-Agent: ' . UltimateOAuthConfig::USER_AGENT     ,
-                'Connection: ' . 'Close'                             ,
-                "\r\n"                                               ,
-            );
-            
-            // Add cookies
-            if ($this->cookie) {
-                array_splice($lines, -1, 0, array(
-                    'Cookie: ' . implode('; ', UltimateOAuthModule::pairize($this->cookie)),
-                ));
-            }
-            
-            if ($multipart) {
-            
-                // Generate boundary
-                $boundary = '--------------' . sha1($_SERVER['REQUEST_TIME']);
-                
-                // Build contents lines
-                $cts_lines = array();
-                foreach ($params as $key => $value) {
-                    $cts_lines[] = '--' . $boundary;
-                    // Convert file names to file binaries
-                    if (strpos($key, '@') === 0) {
-                        $value = UltimateOAuthModule::stringify($value);
-                        if ($value !== '0' && !$value) {
-                            throw new InvalidArgumentException("Filename is empty.");
-                        }
-                        if (!is_file($value)) {
-                            throw new InvalidArgumentException("File \"{$value}\" not found.");
-                        }
-                        $is_file = true;
-                        $disposition = sprintf('form-data; name="%s"; filename="%s"',
-                            substr($key, 1),
-                            md5(mt_rand())
-                        );
-                    } else {
-                        $is_file = false;
-                        $disposition = sprintf('form-data; name="%s"',
-                            $key
+                        array_push($cts_lines,
+                            "Content-Disposition: {$disposition}",
+                            "Content-Type: application/octet-stream",
+                            "",
+                            $is_file ? @file_get_contents($value) : $value
                         );
                     }
-                    array_push($cts_lines,
-                        'Content-Disposition: ' .  $disposition              ,
-                        'Content-Type: '        . 'application/octet-stream' ,
-                        ''                                                   ,
-                        $is_file ? @file_get_contents($value) : $value
+                    $cts_lines[] = '--' . $boundary . '--';
+                    // combine contents lines
+                    $contents = implode("\r\n", $cts_lines);
+                    // add header lines
+                    $length = strlen($contents);
+                    $adds = array(
+                        "Authorization: OAuth {$query}",
+                        "Content-Type: multipart/form-data; boundary={$boundary}",
+                        "Content-Length: {$length}",
+                    );
+                    array_splice($lines, -1, 0, $adds);
+                } elseif ($method === 'POST') {
+                    // add header lines
+                    $length = strlen($query);
+                    $adds = array(
+                        "Content-Type: application/x-www-form-urlencoded",
+                        "Content-Length: {$length}",
+                    );
+                    array_splice($lines, -1, 0, $adds);
+                }
+                // combine header lines
+                $request = implode("\r\n", $lines);
+                if ($multipart) {
+                    // add contents fields
+                    $request .= $contents;
+                } elseif ($method === 'POST') {
+                    // add query to the post fields
+                    $request .= $query;
+                }
+                // connect
+                $res = $this->connect(
+                    $elements['host'],
+                    $elements['scheme'],
+                    $request,
+                    $wait_response,
+                    $xauth_info
+                );
+                // update information of last API call
+                $this->last_called_endpoint = $elements['path'];
+                // return NULL or HTML
+                if (!$wait_response || $scraping) {
+                    return $res;
+                }
+                if (($json = json_decode($res)) === null) {
+                    // check non-json_encoded error
+                    if (stripos('Failed', $res) === 0) {
+                        throw new RuntimeException($res);
+                    }
+                    // check endpoint
+                    if (!preg_match('@^/oauth/((?:request|access)_token)$@', $elements['path'], $matches)) {
+                        throw new RuntimeException('Failed to decode as JSON. There may be some errors on the request header.');
+                    }
+                    // parse OAuth query string
+                    parse_str($res, $oauth_tokens);
+                    if (!isset(
+                        $oauth_tokens['oauth_token'],
+                        $oauth_tokens['oauth_token_secret'],
+                        $oauth_tokens['user_id'],
+                        $oauth_tokens['screen_name']
+                    )) {
+                        throw new RuntimeException('Failed to parse response that should contain oauth_token.');
+                    }
+                    // update properties
+                    $b = ($a = $matches[1]) . '_secret';
+                    $this->$a          = $oauth_tokens['oauth_token'];
+                    $this->$b          = $oauth_tokens['oauth_token_secret'];
+                    $this->user_id     = $oauth_tokens['user_id'];
+                    $this->screen_name = $oauth_tokens['screen_name'];
+                    // return object-converted response
+                    return (object)$oauth_tokens;
+                }
+                // set additional xAuth information
+                if (isset($xauth_info, $json->id)) {
+                    $json->consumer_key        = $this->consumer_key;
+                    $json->consumer_secret     = $this->consumer_secret;
+                    $json->access_token        = $xauth_info->access_token;
+                    $json->access_token_secret = $xauth_info->access_token_secret;
+                }
+                // modify deformed error response
+                if (isset($json->error)) {
+                    $json = (object)array(
+                        'errors' => array(
+                            (object)array(
+                                'code'    => -1,
+                                'message' => $json->error,
+                            ),
+                        ),
+                    );
+                } elseif (isset($json->errors) && !is_array($json->errors)) {
+                    $json = (object)array(
+                        'errors' => array(
+                            (object)array(
+                                'code'    => -1,
+                                'message' => $json->errors,
+                            ),
+                        ),
                     );
                 }
-                $cts_lines[] = '--' . $boundary . '--';
+                // override error codes with HTTP status code
+                if (isset($json->errors)) {
+                    foreach ($json->errors as $error) {
+                        $error->code = $this->last_http_status_code;
+                    }
+                }
+                // return response
+                return $json;
+            
+            } catch (Exception $e) {
                 
-                // Combine contents lines
-                $contents = implode("\r\n", $cts_lines);
-                
-                // Add header lines
-                $adds = array(
-                    'Authorization: '  . 'OAuth ' . $query                            ,
-                    'Content-Type: '   . 'multipart/form-data; boundary=' . $boundary ,
-                    'Content-Length: ' . strlen($contents)                            ,
+                // return an error object
+                return UltimateOAuthModule::createErrorObject(
+                    $e->getMessage(),
+                    $this->last_http_status_code
                 );
-                array_splice($lines, -1, 0, $adds);
-                
-            } elseif ($method === 'POST') {
-                
-                // Add header lines
-                $adds = array(
-                    'Content-Type: '   . 'application/x-www-form-urlencoded'        ,
-                    'Content-Length: ' . strlen($query)                             ,
-                );
-                array_splice($lines, -1, 0, $adds);
-                
+            
             }
-            
-            // Combine header lines
-            $request = implode("\r\n", $lines);
-            
-            if ($multipart) {
-                // Add contents fields
-                $request .= $contents;
-            } elseif ($method === 'POST') {
-                // Add query to the post fields
-                $request .= $query;
-            }
-            
-            // Connect
-            $res = $this->connect(
-                $elements['host']   ,
-                $elements['scheme'] ,
-                $request            ,
-                $wait_response
+        
+        }
+        
+        /**
+         * Generate a query string for OAuth authorization.
+         *
+         * @access private 
+         * @param  string  $uri
+         * @param  string  $path
+         * @param  string  $method
+         * @param  array   $opt
+         * @param  boolean $as_header
+         * @return string
+         */
+        private function getQueryString($uri, $path, $method, $opt, $as_header) {
+            // initialize parameters
+            $parameters = array(
+                'oauth_consumer_key'     => $this->consumer_key,
+                'oauth_signature_method' => 'HMAC-SHA1',
+                'oauth_timestamp'        => time(),
+                'oauth_nonce'            => md5(mt_rand()),
+                'oauth_version'          => '1.0',
             );
-            
-            // Update information of last API call
-            $this->last_called_endpoint = $elements['path'];
-            
-            // Return void if response is not necessary
-            if (!$wait_response) {
-                return;
-            }
-            
-            if ($scraping) {
-            
-                // Return HTML
-                return $res;
-                
-            } elseif (
-                !is_object($json = json_decode($res)) &&
-                preg_match('@^/oauth/(?:(request)|access)_token$@', $elements['path'], $matches)
-            ) {
-                
-                // Parse OAuth query string
-                parse_str($res, $oauth_tokens);
-                if (!isset($oauth_tokens['oauth_token'], $oauth_tokens['oauth_token_secret'])) {
-                    throw new RuntimeException('Failed to parse response. There may be some errors.');
-                }
-                
-                // Update properties
-                if (empty($matches[1])) {
-                    if (isset($oauth_tokens['oauth_token'])) {
-                        $this->access_token        = $oauth_tokens['oauth_token'];
-                    }
-                    if (isset($oauth_tokens['oauth_token_secret'])) {
-                        $this->access_token_secret = $oauth_tokens['oauth_token_secret'];
-                    }
-                    $res = (object)array(
-                        'oauth_token'        => $this->access_token         ,
-                        'oauth_token_secret' => $this->access_token_secret  ,
-                    );
-                } else {
-                    if (isset($oauth_tokens['oauth_token'])) {
-                        $this->request_token        = $oauth_tokens['oauth_token'];
-                    }
-                    if (isset($oauth_tokens['oauth_token_secret'])) {
-                        $this->request_token_secret = $oauth_tokens['oauth_token_secret'];
-                    }
-                    $res = (object)array(
-                        'oauth_token'        => $this->request_token        ,
-                        'oauth_token_secret' => $this->request_token_secret ,
-                    );
-                }
-                if (isset($oauth_tokens['user_id'], $oauth_tokens['screen_name'])) {
-                    $this->user_id     = $res->user_id     = $oauth_tokens['user_id'];
-                    $this->screen_name = $res->screen_name = $oauth_tokens['screen_name'];
-                }
-                
+            // add parameters
+            if ($path === '/oauth/request_token') {
+                $oauth_token_secret           = '';
+            } elseif ($path === '/oauth/access_token') {
+                $parameters['oauth_verifier'] = $this->oauth_verifier;
+                $parameters['oauth_token']    = $this->request_token;
+                $oauth_token_secret           = $this->request_token_secret;
             } else {
-                
-                if (!is_object($json) && !is_array($json)) {
-                    throw new RuntimeException('Failed to decode as JSON. There may be some errors on the request header.');
-                }
-                $res = $json;
-                
+                $parameters['oauth_token']    = $this->access_token;
+                $oauth_token_secret           = $this->access_token_secret;
             }
-            
-            // Modify deformed error response
-            if (isset($res->error)) {
-                $res = (object)array(
-                    'errors' => array(
-                        (object)array(
-                            'code'    => -1          ,
-                            'message' => $res->error ,
-                        ),
-                    ),
-                );
-            } elseif (isset($res->errors) && !is_array($res->errors)) {
-                $res = (object)array(
-                    'errors' => array(
-                        (object)array(
-                            'code'    => -1           ,
-                            'message' => $res->errors ,
-                        ),
-                    ),
-                );
+            if (!$as_header) {
+                $parameters += $opt;
             }
-            
-            // Override error codes with HTTP status code
-            if (isset($res->errors)) {
-                foreach ($res->errors as $error) {
-                    $error->code = $this->last_http_status_code;
-                }
-            }
-            
-            // Return response
-            return $res;
-        
-        } catch (Exception $e) {
-            
-            // Return an error object
-            return UltimateOAuthModule::createErrorObject(
-                $e->getMessage(),
-                $this->last_http_status_code
-            );
-        
-        }
-    
-    }
-    
-    /*
-     *  (string) getQueryString() - Build query string for OAuth authorization.
-     */
-    private function getQueryString($uri, $path, $method, $opt, $as_header) {
-        
-        // Initialize parameters
-        $parameters = array(
-            'oauth_consumer_key'     => $this->consumer_key      ,
-            'oauth_signature_method' => 'HMAC-SHA1'              ,
-            'oauth_timestamp'        => $_SERVER['REQUEST_TIME'] ,
-            'oauth_nonce'            => md5(mt_rand())           ,
-            'oauth_version'          => '1.0'                    ,
-        );
-        
-        // Add parameters
-        if ($path === '/oauth/request_token') {
-            $oauth_token_secret           = '';
-        } elseif ($path === '/oauth/access_token') {
-            $parameters['oauth_verifier'] = $this->oauth_verifier;
-            $parameters['oauth_token']    = $this->request_token;
-            $oauth_token_secret           = $this->request_token_secret;
-        } else {
-            $parameters['oauth_token']    = $this->access_token;
-            $oauth_token_secret           = $this->access_token_secret;
-        }
-        if (!$as_header) {
-            $parameters += $opt;
-        }
-        
-        // Build body for signature
-        $body = implode(
-            '&',
-            array_map(
-                array(
-                    'UltimateOAuthModule',
-                    'enc',
-                ),
-                array(
-                    $method,
-                    $uri,
-                    implode(
-                        '&',
-                        UltimateOAuthModule::pairize(
-                            UltimateOAuthModule::nksort(
-                                array_map(
-                                    array(
-                                        'UltimateOAuthModule',
-                                        'enc',
-                                    ),
-                                    $parameters
-                                )
-                            )
-                        )
-                    ),
-                )
-            )
-        );
-        
-        // Build key for signature
-        $key = implode(
-            '&',
-            array_map(
-                array(
-                    'UltimateOAuthModule',
-                    'enc',
-                ),
-                array(
-                    $this->consumer_secret,
-                    $oauth_token_secret,
-                )
-            )
-        );
-        
-        // Build signature
-        $parameters['oauth_signature'] = base64_encode(hash_hmac('sha1', $body, $key, true));
-        
-        // Return query string
-        return implode(
-            $as_header ?
-                ', ' :
-                '&'
-            ,
-            UltimateOAuthModule::pairize(
+            // build body for signature
+            $body = implode(
+                '&',
                 array_map(
                     array(
                         'UltimateOAuthModule',
                         'enc',
                     ),
-                    $parameters
+                    array(
+                        $method,
+                        $uri,
+                        implode(
+                            '&',
+                            UltimateOAuthModule::pairize(
+                                UltimateOAuthModule::nksort(
+                                    array_map(
+                                        array(
+                                            'UltimateOAuthModule',
+                                            'enc',
+                                        ),
+                                        $parameters
+                                    )
+                                )
+                            )
+                        ),
+                    )
                 )
-            )
-        );
-    
+            );
+            // build key for signature
+            $key = implode(
+                '&',
+                array_map(
+                    array(
+                        'UltimateOAuthModule',
+                        'enc',
+                    ),
+                    array(
+                        $this->consumer_secret,
+                        $oauth_token_secret,
+                    )
+                )
+            );
+            // build signature
+            $parameters['oauth_signature'] = base64_encode(hash_hmac('sha1', $body, $key, true));
+            // return query string
+            return implode(
+                $as_header ?
+                    ', ' :
+                    '&'
+                ,
+                UltimateOAuthModule::pairize(
+                    array_map(
+                        array(
+                            'UltimateOAuthModule',
+                            'enc',
+                        ),
+                        $parameters
+                    )
+                )
+            );
+        }
+        
     }
     
 }
- 
- 
- 
- 
-/*  
- *  UltimateOAuthMulti - Multi request class.
- */ 
-class UltimateOAuthMulti {
+
+/**
+ * UltimateOAuthMulti
+ *
+ * Multi request class.
+ */
+if (!class_exists('UltimateOAuthMulti')) {
     
-    /********************/
-    /**** Properties ****/
-    /********************/
-    
-    private $queues;
-    private $filename;
-    
-    /***************************/
-    /**** Interface Methods ****/
-    /***************************/
-    
-    /*
-     *  (UltimateOAuth) __construct() - Create a new UltimateOAuthMulti instance.
-     */
-    public function __construct() {
-        // Initialize properties
-        $this->queues   = array();
-        $this->filename = str_replace('\\', '/', __FILE__);
-    }
-    
-    /*
-     *  (void) enqueue() - Enqueue a new request.
-     */
-    public function enqueue(
-        UltimateOAuth &$uo, // arg1            : UltimateOAuth instance. Passed by reference.
-        $method             // arg2            : Interface method name.
-                            // arg3, arg4, ... : Arguments for method.
-    ) {
-        $this->queues[] = (object)array(
-            'uo'       => &$uo,
-            'method'   => UltimateOAuthModule::stringify($method),
-            'args'     => array_slice(func_get_args(), 2),
-        );
-    }
-    
-    /*
-     *  (array | void) execute() - Execute all requests.
-     */
-    public function execute(
-        $wait_processes = true // If you don't need to get responses, set it to FALSE.
-    ) {
-    
-        $ret = UltimateOAuthConfig::USE_PROC_OPEN ?
-            $this->execute_by_proc_open($wait_processes) :
-            $this->execute_by_fsockopen($wait_processes)
-        ;
+    class UltimateOAuthMulti {
         
-        // Clear queues
-        $this->queues = array();
+        /********************/
+        /**** Properties ****/
+        /********************/
         
-        return $ret;
+        private $queues;
+        private $filename;
         
-    }
-    
-    /**************************/
-    /**** Internal Methods ****/
-    /**************************/
-    
-    /*
-     *  (void) __sleep() - You can't serialize this object.
-     */
-    public function __sleep() {
-        throw BadMethodCallException('This object is not serializable.');
-    }
-    
-    /*
-     *  (array | void) execute_by_proc_open()
-     */
-    private function execute_by_proc_open($wait_processes) {
-    
-        // Prepare proc_open() arguments
-        $descriptorspec = array(
-            0 => array('pipe', 'r'),
-            1 => array('pipe', 'w'),
-            2 => array('pipe', 'w'),
-        );
-        $procs = $pipes = $res = $err_flags = array();
+        /***************************/
+        /**** Interface Methods ****/
+        /***************************/
         
-        // Prepare PHP source
-        $format = 
-            '<?php ' . PHP_EOL . 
-            'ob_start(); ' . PHP_EOL . 
-            'require(\'%s\'); ' . PHP_EOL . 
-            '$s = unserialize(\'%s\'); ' . PHP_EOL . 
-            '$res = call_user_func_array(array($s->uo, $s->method), $s->args); ' . PHP_EOL . 
-            '$res = serialize(array($s->uo, $res)); ' . PHP_EOL . 
-            'ob_end_clean(); ' . PHP_EOL . 
-            'echo $res; ' . PHP_EOL . 
-            'exit();'
-        ;
-        
-        // Open processes
-        foreach ($this->queues as $i => $queue) {
-            $procs[$i] = @proc_open(
-                UltimateOAuthConfig::PHP_COMMAND,
-                $descriptorspec,
-                $pipes[$i],
-                null,
-                null,
-                array(
-                    'bypass_shell' => true,
-                    'supress_errors' => true,
-                )
-            );
-            if (!$procs[$i]) {
-                continue;
-            }
-            // Enable task to be executed parallelly
-            stream_set_blocking($pipes[$i][0], 0);
-            stream_set_blocking($pipes[$i][1], 0);
-            stream_set_blocking($pipes[$i][2], 0);
-            // Bind values
-            $adds = "\\'";
-            $text = sprintf($format,
-                addcslashes($this->filename  , $adds),
-                addcslashes(serialize($queue), $adds)
-            );
-            // Write PHP Source
-            fwrite($pipes[$i][0], $text);
-            fclose($pipes[$i][0]);
-            // Initialization
-            $res[$i] = '';
-            $err_flags[$i] = false;
+        /**
+         * Create a new UltimateOAuthMulti instance.
+         * 
+         * @access public 
+         */
+        public function __construct() {
+            // initialize properties
+            $this->queues   = array();
+            $this->filename = str_replace('\\', '/', __FILE__);
         }
         
-        // Return void if response is not necessary
-        if (!$wait_processes) {
-            return;
-        } elseif (!$this->queues) {
-            return array();
+        /**
+         * Enqueue a new request.
+         * 
+         * @access public
+         * @param  UltimateOAuth &$uo    Passed by reference.
+         * @param  string        $method Interface method name.
+         * @param  mixed         [...]   Additional arguments for the method.
+         */
+        public function enqueue(UltimateOAuth &$uo, $method) {
+            $this->queues[] = (object)array(
+                'uo'     => &$uo,
+                'method' => UltimateOAuthModule::stringify($method),
+                'args'   => array_slice(func_get_args(), 2),
+            );
         }
         
-        // Get responses
-        while (true) {
-            $break = true;
-            foreach ($pipes as $i => $pipe) {
+        /**
+         * Execute all requests.
+         * 
+         * @access public
+         * @param  boolean [$wait_processes] Whether synchronous or not. True as default.
+         * @return mixed                     An array contains responses or NULL.
+         */
+        public function execute($wait_processes = true) {
+            $ret = UltimateOAuthConfig::USE_PROC_OPEN ?
+                $this->execute_by_proc_open($wait_processes) :
+                $this->execute_by_fsockopen($wait_processes)
+            ;
+            // clear queues
+            $this->queues = array();
+            return $ret;
+        }
+        
+        /**************************/
+        /**** Internal Methods ****/
+        /**************************/
+        
+        /**
+         * You can't serialize this object.
+         * 
+         * @magic 
+         * @access public
+         */
+        public function __sleep() {
+            throw BadMethodCallException('This object is not serializable.');
+        }
+        
+        /**
+         * Used if USE_PROC_OPEN == True.
+         * 
+         * @access private
+         * @param  booelan $wait_processes
+         * @return mixed
+         */
+        private function execute_by_proc_open($wait_processes) {
+            // prepare proc_open() arguments
+            $descriptorspec = array(
+                0 => array('pipe', 'r'),
+                1 => array('pipe', 'w'),
+                2 => array('pipe', 'w'),
+            );
+            $procs = $pipes = $res = $err_flags = array();
+            // prepare PHP source
+            $format = 
+                '<?php ' . PHP_EOL . 
+                'ob_start(); ' . PHP_EOL . 
+                'require(\'%s\'); ' . PHP_EOL . 
+                '$s = unserialize(\'%s\'); ' . PHP_EOL . 
+                '$res = call_user_func_array(array($s->uo, $s->method), $s->args); ' . PHP_EOL . 
+                '$res = serialize(array($s->uo, $res)); ' . PHP_EOL . 
+                'ob_end_clean(); ' . PHP_EOL . 
+                'echo $res; ' . PHP_EOL . 
+                'exit();'
+            ;
+            // open processes
+            foreach ($this->queues as $i => $queue) {
+                $procs[$i] = @proc_open(
+                    UltimateOAuthConfig::PHP_COMMAND,
+                    $descriptorspec,
+                    $pipes[$i],
+                    null,
+                    null,
+                    array(
+                        'bypass_shell' => true,
+                        'supress_errors' => true,
+                    )
+                );
                 if (!$procs[$i]) {
-                    $res[$i] = 'Failed to start process.';
-                    $err_flags[$i] = true;
-                    unset($pipes[$i]);
                     continue;
                 }
-                while (!feof($pipe[1]) || !feof($pipe[2])) {
-                    // Select socket stream
-                    $ret = @stream_select(
-                        $read = array($pipe[1], $pipe[2]),
-                        $write = null,
-                        $except = null,
-                        $timeout = 5
-                    );  
-                    if (!$ret) {
-                        $res[$i] = 'Failed to select stream resource, or timeout.';
+                // enable task to be executed parallelly
+                stream_set_blocking($pipes[$i][0], 0);
+                stream_set_blocking($pipes[$i][1], 0);
+                stream_set_blocking($pipes[$i][2], 0);
+                // bind values
+                $adds = "\\'";
+                $text = sprintf($format,
+                    addcslashes($this->filename  , $adds),
+                    addcslashes(serialize($queue), $adds)
+                );
+                // write PHP Source
+                fwrite($pipes[$i][0], $text);
+                fclose($pipes[$i][0]);
+                // initialization
+                $res[$i] = '';
+                $err_flags[$i] = false;
+            }
+            // return if response is not necessary
+            if (!$wait_processes) {
+                return;
+            } elseif (!$this->queues) {
+                return array();
+            }
+            // get responses
+            Do {
+                $active = false;
+                foreach ($pipes as $i => $pipe) {
+                    if (!$procs[$i]) {
+                        $res[$i] = 'Failed to start process.';
                         $err_flags[$i] = true;
-                        fclose($pipe[1]);
-                        fclose($pipe[2]);
-                        proc_close($procs[$i]);
                         unset($pipes[$i]);
-                        continue 2;
+                        continue;
                     }
-                    foreach ($read as $sock) {
-                        // Get data within 48000 bytes
-                        $tmp = fread($sock, 48000);
-                        if ($tmp === false) {
-                            $res[$i] = 'Failed to read buffer.';
+                    while (!feof($pipe[1]) || !feof($pipe[2])) {
+                        // select socket stream
+                        $ret = @stream_select(
+                            $read = array($pipe[1], $pipe[2]),
+                            $write = null,
+                            $except = null,
+                            $timeout = 5
+                        );  
+                        if (!$ret) {
+                            $res[$i] = 'Failed to select stream resource, or timeout.';
                             $err_flags[$i] = true;
                             fclose($pipe[1]);
                             fclose($pipe[2]);
                             proc_close($procs[$i]);
                             unset($pipes[$i]);
-                            continue 3;
+                            continue 2;
                         }
-                        $break = false;
-                        if ($sock === $pipe[2]) {
-                            if (!$err_flags[$i] && $tmp !== '') {
+                        foreach ($read as $sock) {
+                            // get data within 48000 bytes
+                            $tmp = fread($sock, 48000);
+                            if ($tmp === false) {
+                                $res[$i] = 'Failed to read buffer.';
                                 $err_flags[$i] = true;
-                                $res[$i] = '';
+                                fclose($pipe[1]);
+                                fclose($pipe[2]);
+                                proc_close($procs[$i]);
+                                unset($pipes[$i]);
+                                continue 3;
                             }
-                            $res[$i] .= $tmp;
-                            break;
-                        }
-                        if (!$err_flags[$i]) {
-                            $res[$i] .= $tmp;
+                            $active = true;
+                            if ($sock === $pipe[2]) {
+                                if (!$err_flags[$i] && $tmp !== '') {
+                                    $err_flags[$i] = true;
+                                    $res[$i] = '';
+                                }
+                                $res[$i] .= $tmp;
+                                break;
+                            }
+                            if (!$err_flags[$i]) {
+                                $res[$i] .= $tmp;
+                            }
                         }
                     }
                 }
+            } while ($active);
+            // free resources
+            foreach ($pipes as $i => $pipe) {
+                fclose($pipe[1]);
+                fclose($pipe[2]);
+                proc_close($procs[$i]);
             }
-            if ($break) {
-                break;
-            }
-        }
-        
-        // Free resources
-        foreach ($pipes as $i => $pipe) {
-            fclose($pipe[1]);
-            fclose($pipe[2]);
-            proc_close($procs[$i]);
-        }
-        
-        // Optimize responses
-        $tmp = null;
-        foreach ($res as $i => $r) {
-            if ($err_flags[$i] || ($tmp = $i) === null || !is_array($r = @unserialize($r))) {
-                if ($tmp === $i) {
-                    $r = 'Failed to get valid response.';
-                }
-                $res[$i] = UltimateOAuthModule::createErrorObject(strip_tags($r));
-                continue;
-            }
-            $res[$i] = $r[1];
-            $this->queues[$i]->uo = $r[0];
-        }
-        
-        // Return responses
-        return $res;
-        
-    }
-    
-    /*
-     *  (array | void) execute_by_fsockopen()
-     */
-    private function execute_by_fsockopen($wait_processes) {
-        
-        // Prepare URI elements
-        $uri = parse_url(UltimateOAuthConfig::FULL_URL_TO_THIS_FILE);
-        if (!$uri || !isset($uri['host'])) {
-            $uri = false;
-        } else {
-            if (!isset($uri['path'])) {
-                $uri['path'] = '/';
-            }
-            if (!isset($uri['port'])) {
-                $uri['port'] = $uri['scheme'] === 'https' ? 443 : 80;
-            }
-        }
-        
-        // Open sockets
-        $fps = array();
-        $res = array();
-        foreach ($this->queues as $i => $queue) {
-            if ($uri === false) {
-                $fps[$i] = false;
-                continue;
-            }
-            $host = $uri['scheme'] === 'https' ? 'ssl://'.$uri['host'] : $uri['host'];
-            $fps[$i] = @fsockopen($host, $uri['port'], $errno, $errstr, 5);
-            if (!$fps[$i]) {
-                continue;
-            }
-            stream_set_blocking($fps[$i], 0);
-            stream_set_timeout($fps[$i], 60);
-            $postfield = json_encode(array(
-                'uo' => array(
-                    'consumer_key'          => $queue->uo->consumer_key,
-                    'consumer_secret'       => $queue->uo->consumer_secret,
-                    'access_token'          => $queue->uo->access_token,
-                    'access_token_secret'   => $queue->uo->access_token_secret,
-                    'request_token'         => $queue->uo->request_token,
-                    'request_token_secret'  => $queue->uo->request_token_secret,
-                    'oauth_verifier'        => $queue->uo->oauth_verifier,
-                    'authenticity_token'    => $queue->uo->authenticity_token,
-                    'cookie'                => $queue->uo->cookie,
-                    'last_http_status_code' => $queue->uo->last_http_status_code,
-                    'last_called_endpoint'  => $queue->uo->last_called_endpoint,
-                    'user_id'               => $queue->uo->user_id,
-                    'screen_name'           => $queue->uo->screen_name,
-                ),
-                'method' => $queue->method,
-                'args' => $queue->args,
-            ));
-            $postfield = http_build_query(array(
-                UltimateOAuthConfig::MULTIPLE_REQUEST_KEY_NAME => $postfield,
-            ), '', '&');
-            $length = strlen($postfield);
-            $user_agent = UltimateOAuthConfig::USER_AGENT;
-            $header = 
-                "POST {$uri['path']} HTTP/1.0\r\n".
-                "Host: {$uri['host']}\r\n".
-                "User-Agent: {$user_agent}\r\n".
-                "Connection: Close\r\n".
-                "Content-Type: application/x-www-form-urlencoded\r\n".
-                "Content-Length: {$length}\r\n".
-                "\r\n".
-                $postfield
-            ;
-            fwrite($fps[$i], $header);
-            $res[$i] = '';
-        }
-        
-        // Return void if response is not necessary
-        if (!$wait_processes) {
-            return;
-        } elseif (!$this->queues) {
-            return array();
-        }
-        
-        // Get responses
-        Do {
-            $active = false;
-            foreach ($fps as $i => $fp) {
-                // Skip failed resourse
-                if (!$fp) {
-                    $res[$i] = false;
-                    unset($fps[$i]);
+            // optimize responses
+            $tmp = null;
+            foreach ($res as $i => $r) {
+                if ($err_flags[$i] || ($tmp = $i) === null || !is_array($r = @unserialize($r))) {
+                    if ($tmp === $i) {
+                        $r = 'Failed to get valid response.';
+                    }
+                    $res[$i] = UltimateOAuthModule::createErrorObject(strip_tags($r));
                     continue;
                 }
-                // Skip failed result
-                if (($tmp = stream_get_contents($fp)) === false) {
-                    $res[$i] = null;
-                    fclose($fp);
-                    unset($fps[$i]);
-                    continue;
-                }
-                $res[$i] .= $tmp;
-                // Check EOF
-                if (feof($fp)) {
-                    fclose($fp);
-                    unset($fps[$i]);
-                    continue;
-                }
-                $active = true;
+                $res[$i] = $r[1];
+                $this->queues[$i]->uo = $r[0];
             }
-        } while ($active);
+            // return responses
+            return $res;
+        }
         
-        // Check responses
-        foreach ($res as $i => $r) {
-            // Invalid URI
-            if ($uri === false) {
-                $res[$i] = UltimateOAuthModule::createErrorObject('Invalid URI.');
-                continue;
+        /**
+         * Used if USE_PROC_OPEN == False.
+         * 
+         * @access private
+         * @param  booelan $wait_processes
+         * @return mixed
+         */
+        private function execute_by_fsockopen($wait_processes) {
+            // prepare URI elements
+            $uri = parse_url(UltimateOAuthConfig::FULL_URL_TO_THIS_FILE);
+            if (!isset($uri['host'])) {
+                $uri = false;
+            } else {
+                if (!isset($uri['path'])) {
+                    $uri['path'] = '/';
+                }
+                if (!isset($uri['port'])) {
+                    $uri['port'] = $uri['scheme'] === 'https' ? 443 : 80;
+                }
             }
-            // Socket opening failure
-            if ($r === false) {
-                $res[$i] = UltimateOAuthModule::createErrorObject("Failed to connect to {$host}:{$uri['port']}");
-                continue;
+            // open sockets
+            $fps = $res = array();
+            foreach ($this->queues as $i => $queue) {
+                if ($uri === false) {
+                    $fps[$i] = false;
+                    continue;
+                }
+                $host = $uri['scheme'] === 'https' ? 'ssl://' . $uri['host'] : $uri['host'];
+                $fps[$i] = @fsockopen($host, $uri['port'], $errno, $errstr, 5);
+                if (!$fps[$i]) {
+                    continue;
+                }
+                stream_set_blocking($fps[$i], 0);
+                stream_set_timeout($fps[$i], 60);
+                $postfield = json_encode(array(
+                    'uo' => array(
+                        'consumer_key'          => $queue->uo->consumer_key,
+                        'consumer_secret'       => $queue->uo->consumer_secret,
+                        'access_token'          => $queue->uo->access_token,
+                        'access_token_secret'   => $queue->uo->access_token_secret,
+                        'request_token'         => $queue->uo->request_token,
+                        'request_token_secret'  => $queue->uo->request_token_secret,
+                        'oauth_verifier'        => $queue->uo->oauth_verifier,
+                        'authenticity_token'    => $queue->uo->authenticity_token,
+                        'cookie'                => $queue->uo->cookie,
+                        'last_http_status_code' => $queue->uo->last_http_status_code,
+                        'last_called_endpoint'  => $queue->uo->last_called_endpoint,
+                        'user_id'               => $queue->uo->user_id,
+                        'screen_name'           => $queue->uo->screen_name,
+                    ),
+                    'method' => $queue->method,
+                    'args' => $queue->args,
+                ));
+                $postfield = http_build_query(array(
+                    UltimateOAuthConfig::MULTIPLE_REQUEST_KEY_NAME => $postfield,
+                ), '', '&');
+                $length = strlen($postfield);
+                $user_agent = UltimateOAuthConfig::USER_AGENT;
+                $header = 
+                    "POST {$uri['path']} HTTP/1.0\r\n".
+                    "Host: {$uri['host']}\r\n".
+                    "User-Agent: {$user_agent}\r\n".
+                    "Connection: Close\r\n".
+                    "Content-Type: application/x-www-form-urlencoded\r\n".
+                    "Content-Length: {$length}\r\n".
+                    "\r\n".
+                    $postfield
+                ;
+                fwrite($fps[$i], $header);
+                $res[$i] = '';
             }
-            // Getting contents failure
-            if ($r === null) {
-                $res[$i] = UltimateOAuthModule::createErrorObject('Failed to get stream contents.');
-                continue;
+            // return if response is not necessary
+            if (!$wait_processes) {
+                return;
+            } elseif (!$this->queues) {
+                return array();
             }
-            // Empty string error
-            if ($r === '') {
-                $res[$i] = UltimateOAuthModule::createErrorObject('Request to this file itself may be blocked.');
-                continue;
-            }
-            // Invalid response
-            if (
-                !($r = explode("\r\n\r\n", $r, 2))  ||
-                !isset($r[1])                       ||
-                !is_object($r = json_decode($r[1])) ||
-                !isset($r->result)
-            ) {
-                $res[$i] = UltimateOAuthModule::createErrorObject('Failed to get valid stream contents.');
-                continue;
-            } 
-            // Get result
-            $res[$i] = $r->result;
-            // Reconstruction
-            if (isset(
+            // get responses
+            Do {
+                $active = false;
+                foreach ($fps as $i => $fp) {
+                    // Skip failed resourse
+                    if (!$fp) {
+                        $res[$i] = false;
+                        unset($fps[$i]);
+                        continue;
+                    }
+                    // skip failed result
+                    if (($tmp = stream_get_contents($fp)) === false) {
+                        $res[$i] = null;
+                        fclose($fp);
+                        unset($fps[$i]);
+                        continue;
+                    }
+                    $res[$i] .= $tmp;
+                    // check EOF
+                    if (feof($fp)) {
+                        fclose($fp);
+                        unset($fps[$i]);
+                        continue;
+                    }
+                    $active = true;
+                }
+            } while ($active);
+            // check responses
+            foreach ($res as $i => $r) {
+                // invalid URI
+                if ($uri === false) {
+                    $res[$i] = UltimateOAuthModule::createErrorObject('invalid URI.');
+                    continue;
+                }
+                // socket opening failure
+                if ($r === false) {
+                    $res[$i] = UltimateOAuthModule::createErrorObject("Failed to connect to {$host}:{$uri['port']}");
+                    continue;
+                }
+                // getting contents failure
+                if ($r === null) {
+                    $res[$i] = UltimateOAuthModule::createErrorObject('Failed to get stream contents.');
+                    continue;
+                }
+                // empty string error
+                if ($r === '') {
+                    $res[$i] = UltimateOAuthModule::createErrorObject('Request to this file itself may be blocked.');
+                    continue;
+                }
+                // invalid response
+                $r = explode("\r\n\r\n", $r, 2) + array(1 => '');
+                $r = json_decode($r[1]);
+                if (!isset($r->result)) {
+                    $res[$i] = UltimateOAuthModule::createErrorObject('Failed to get valid stream contents.');
+                    continue;
+                } 
+                // get result
+                $res[$i] = $r->result;
+                // reconstruction
+                if (isset(
                     $r->uo->consumer_key,
                     $r->uo->consumer_secret,
                     $r->uo->access_token,
@@ -1180,47 +1189,43 @@ class UltimateOAuthMulti {
                     $r->uo->last_called_endpoint,
                     $r->uo->uesr_id,
                     $r->uo->screen_name
-            )) {
-                $this->queues[$i]->uo = new UltimateOAuth(
-                    $r->uo->consumer_key,
-                    $r->uo->consumer_secret,
-                    $r->uo->access_token,
-                    $r->uo->access_token_secret,
-                    $r->uo->request_token,
-                    $r->uo->request_token_secret,
-                    $r->uo->oauth_verifier,
-                    $r->uo->authenticity_token,
-                    $r->uo->cookie,
-                    $r->uo->last_http_status_code,
-                    $r->uo->last_called_endpoint,
-                    $r->uo->uesr_id,
-                    $r->uo->screen_name
-                );
+                )) {
+                    $this->queues[$i]->uo = new UltimateOAuth(
+                        $r->uo->consumer_key,
+                        $r->uo->consumer_secret,
+                        $r->uo->access_token,
+                        $r->uo->access_token_secret,
+                        $r->uo->request_token,
+                        $r->uo->request_token_secret,
+                        $r->uo->oauth_verifier,
+                        $r->uo->authenticity_token,
+                        $r->uo->cookie,
+                        $r->uo->last_http_status_code,
+                        $r->uo->last_called_endpoint,
+                        $r->uo->uesr_id,
+                        $r->uo->screen_name
+                    );
+                }
             }
+            // return responses
+            return $res;
         }
         
-        // Return responses
-        return $res;
-        
-    }
-    
-    /*
-     *  (void) checkRequest - Output requested results.
-     */
-    public static function checkRequest() {
-        
-        // Check validity
-        if (
-            UltimateOAuthConfig::USE_PROC_OPEN ||
-            !isset($_POST[UltimateOAuthConfig::MULTIPLE_REQUEST_KEY_NAME])
-        ) {
-            return;
-        }
-        
-        // Check inputs
-        if (
-            !is_object($data = json_decode($_POST[UltimateOAuthConfig::MULTIPLE_REQUEST_KEY_NAME])) ||
-            !isset(
+        /**
+         * Output requested results.
+         * 
+         * @static
+         * @access public
+         */
+        public static function checkRequest() {
+            // check validity
+            $key = UltimateOAuthConfig::MULTIPLE_REQUEST_KEY_NAME;
+            if (!UltimateOAuthConfig::USE_PROC_OPEN || !isset($_POST[$key])) {
+                return;
+            }
+            // check inputs
+            $data = json_decode($_POST[$key]);
+            if (!isset(
                 $data->uo->consumer_key,
                 $data->uo->consumer_secret,
                 $data->uo->access_token,
@@ -1236,547 +1241,618 @@ class UltimateOAuthMulti {
                 $data->uo->screen_name,
                 $data->method,
                 $data->args
-            )
-        ) {
+            )) {
+                echo json_encode(array(
+                    'result' => UltimateOAuthModule::createErrorObject('Invalid POST data.')
+                ));
+                exit();
+            }
+            // prepare for calling
+            $uo = new UltimateOAuth(
+                $data->uo->consumer_key,
+                $data->uo->consumer_secret,
+                $data->uo->access_token,
+                $data->uo->access_token_secret,
+                $data->uo->request_token,
+                $data->uo->request_token_secret,
+                $data->uo->oauth_verifier,
+                $data->uo->authenticity_token,
+                $data->uo->cookie,
+                $data->uo->last_http_status_code,
+                $data->uo->last_called_endpoint,
+                $data->uo->uesr_id,
+                $data->uo->screen_name
+            );
+            $method = UltimateOAuthModule::stringify($data->method);
+            $args   = UltimateOAuthModule::arrayfy($data->args);
+            // check callability
+            if (!is_callable(array($uo, $method))) {
+                echo json_encode(array(
+                    'result' => UltimateOAuthModule::createErrorObject('Can\'t call "' . $method . '"')
+                ));
+                exit();
+            }
+            // prepare error handler
+            set_error_handler(array('UltimateOAuthModule', 'errorHandler'), E_ALL);
+            // call
+            ob_start();
+            $res = call_user_func_array(array($uo, $method), $args);
+            $error = ob_get_clean();
+            if ($error !== '') {
+                echo json_encode(array(
+                    'result' => UltimateOAuthModule::createErrorObject($error)
+                ));
+                exit();
+            }
+            // output result
             echo json_encode(array(
-                'result' => UltimateOAuthModule::createErrorObject('Invalid POST data.')
+                'result' => $res,
+                'uo'     => array(
+                    'consumer_key'          => $data->uo->consumer_key,
+                    'consumer_secret'       => $data->uo->consumer_secret,
+                    'access_token'          => $data->uo->access_token,
+                    'access_token_secret'   => $data->uo->access_token_secret,
+                    'request_token'         => $data->uo->request_token,
+                    'request_token_secret'  => $data->uo->request_token_secret,
+                    'oauth_verifier'        => $data->uo->oauth_verifier,
+                    'authenticity_token'    => $data->uo->authenticity_token,
+                    'cookie'                => $data->uo->cookie,
+                    'last_http_status_code' => $data->uo->last_http_status_code,
+                    'last_called_endpoint'  => $data->uo->last_called_endpoint,
+                    'user_id'               => $data->uo->user_id,
+                    'screen_name'           => $data->uo->screen_name,
+                ),
             ));
-            return;
+            exit();
         }
-        
-        // Prepare for calling
-        $uo = new UltimateOAuth(
-            $data->uo->consumer_key,
-            $data->uo->consumer_secret,
-            $data->uo->access_token,
-            $data->uo->access_token_secret,
-            $data->uo->request_token,
-            $data->uo->request_token_secret,
-            $data->uo->oauth_verifier,
-            $data->uo->authenticity_token,
-            $data->uo->cookie,
-            $data->uo->last_http_status_code,
-            $data->uo->last_called_endpoint,
-            $data->uo->uesr_id,
-            $data->uo->screen_name
-        );
-        $method = UltimateOAuthModule::stringify($data->method);
-        $args   = UltimateOAuthModule::arrayfy($data->args);
-        
-        // Check callability
-        if (!is_callable(array($uo, $method))) {
-            echo json_encode(array(
-                'result' => UltimateOAuthModule::createErrorObject('Can\'t call "'.$method.'"')
-            ));
-            return;
-        }
-        
-        // Prepare error handler
-        set_error_handler(array('UltimateOAuthModule','errorHandler'), E_ALL);
-        
-        // Call
-        ob_start();
-        $res = call_user_func_array(array($uo, $method), $args);
-        $error = ob_get_clean();
-        if ($error !== '') {
-            echo json_encode(array(
-                'result' => UltimateOAuthModule::createErrorObject($error)
-            ));
-            return;
-        }
-        
-        // Output result
-        echo json_encode(array(
-            'result' => $res,
-            'uo'     => array(
-                'consumer_key'          => $data->uo->consumer_key,
-                'consumer_secret'       => $data->uo->consumer_secret,
-                'access_token'          => $data->uo->access_token,
-                'access_token_secret'   => $data->uo->access_token_secret,
-                'request_token'         => $data->uo->request_token,
-                'request_token_secret'  => $data->uo->request_token_secret,
-                'oauth_verifier'        => $data->uo->oauth_verifier,
-                'authenticity_token'    => $data->uo->authenticity_token,
-                'cookie'                => $data->uo->cookie,
-                'last_http_status_code' => $data->uo->last_http_status_code,
-                'last_called_endpoint'  => $data->uo->last_called_endpoint,
-                'user_id'               => $data->uo->user_id,
-                'screen_name'           => $data->uo->screen_name,
-            ),
-        ));
-        
-        exit();
         
     }
     
 }
- 
- 
- 
- 
-/*  
- *  UltimateOAuthRotate - Rotation managing class.
- *                        This enables you to avoid API limits easily.
- */ 
-class UltimateOAuthRotate {
+
+/**
+ * UltimateOAuthRotate
+ *
+ * Rotation managing class.
+ * This enables you to avoid API limits easily.
+ */
+if (!class_exists('UltimateOAuthRotate')) {
     
-    /********************/
-    /**** Properties ****/
-    /********************/
-    
-    private $current;
-    private $instances;
-    
-    /***************************/
-    /**** Interface Methods ****/
-    /***************************/
-    
-    /*
-     *  (UltimateOAuthRotate) __construct() - Create a new UltimateOAuthRotate instance.
-     */
-    public function __construct() {
-        // Initialize properties
-        $this->current = array(
-            'POST' => null,
-            'GET'  => array(),
-        );
-        $this->instances = array(
-            'original' => array(),
-            'official' => array(),
-        );
-        foreach (self::getOfficialKeys() as $name => $consumer) {
-            $this->instances['official'][$name] = new UltimateOAuth(
-                $consumer['consumer_key'],
-                $consumer['consumer_secret']
+    class UltimateOAuthRotate {
+        
+        /********************/
+        /**** Properties ****/
+        /********************/
+        
+        private $current;
+        private $instances;
+        
+        /***************************/
+        /**** Interface Methods ****/
+        /***************************/
+        
+        /**
+         * Create a new UltimateOAuthRotate instance.
+         * 
+         * @access public 
+         */
+        public function __construct() {
+            // initialize properties
+            $this->current = array(
+                'POST' => null,
+                'GET'  => array(),
             );
-        }
-    }
-    
-    /*
-     *  (bool) setCurrent() - Select instance for POST request specified by name.
-     */
-    public function setCurrent(
-        $name // The name you registered
-    ) {
-        foreach ($this->instances as $type => $keys) {
-            foreach ($keys as $key => $instance) {
-                if ($key === $name) {
-                    $this->current['POST'] = array($type, $name);
-                    return true;
-                }
+            $this->instances = array(
+                'original' => array(),
+                'official' => array(),
+                'signup'   => array(),
+            );
+            foreach ($tmp = UltimateOAuthModule::getOfficialKeys() as $name => $consumer) {
+                $this->instances['official'][$name] = new UltimateOAuth(
+                    $consumer['consumer_key'],
+                    $consumer['consumer_secret']
+                );
+            }
+            foreach (array_diff_key(UltimateOAuthModule::getOfficialKeys(true), $tmp) as $name => $consumer) {
+                $this->instances['signup'][$name] = new UltimateOAuth(
+                    $consumer['consumer_key'],
+                    $consumer['consumer_secret']
+                );
             }
         }
-        return false;
-    }
-    
-    /*
-     *  (bool) resister() - Register your original consumer_key.
-     */
-    public function register(
-        $name,           // Used for identification.
-        $consumer_key,   // Consumer Key
-        $consumer_secret // Consumer Secret
-    ) {
-        if (isset($this->instances['official'][$name])) {
+        
+        /**
+         * Select instance for POST request specified by name.
+         * 
+         * @access public
+         * @param  string  $name The name you registered.
+         * @return boolean       Whether configuration successful or not.
+         */
+        public function setCurrent($name) {
+            foreach ($this->instances as $type => $keys) {
+                foreach ($keys as $key => $instance) {
+                    if ($key === $name) {
+                        $this->current['POST'] = array($type, $name);
+                        return true;
+                    }
+                }
+            }
             return false;
         }
-        $this->instances['original'][$name] = new UltimateOAuth(
-            $consumer_key,
-            $consumer_secret
-        );
-        return true;
-    }
-    
-    /*
-     *  (bool | array) login() - Login.
-     */
-    public function login(
-        $username,             // screen_name or E-mail address.
-        $password,             // password.
-        $return_array = false  // If you need each response, set it to TRUE.
-    ) {
         
-        // Create a new UltimateOAuthMulti instance
-        $uom = new UltimateOAuthMulti;
-        
-        // Enqueue
-        foreach ($this->instances as &$keys) {
-            foreach ($keys as &$instance) {
-                $uom->enqueue($instance, 'directGetToken', $username, $password);
+        /**
+         * Register your original consumer_key.
+         * Official ones cannot be overrided.
+         * 
+         * @access public
+         * @param  string  $name            The unique application name.
+         * @param  string  $consumer_key
+         * @param  string  $consumer_secret
+         * @return boolean                  Whether registeration successful or not.
+         */
+        public function register($name, $consumer_key, $consumer_secret) {
+            if (isset($this->instances['official'][$name], $this->instances['signup'][$name])) {
+                return false;
             }
-        }
-        
-        // Execute
-        $res = array_combine(
-            array_keys($this->instances['original'] + $this->instances['official']),
-            $uom->execute()
-        );
-        
-        // Return results
-        if (!$return_array) {
-            foreach ($res as $r) {
-                if (isset($r->errors)) {
-                    return false;
-                }
-            }
+            $this->instances['original'][$name] = new UltimateOAuth(
+                $consumer_key,
+                $consumer_secret
+            );
             return true;
-        } else {
-            return $res;
         }
         
-    }
-    
-    /*
-     *  (UltimateOAuth | bool) getInstance($name) - Return the clone of instance specified by name.
-     */
-    public function getInstance(
-        $name // The name you registered
-    ) {
-        foreach ($this->instances as $keys) {
-            foreach ($keys as $key => $instance) {
-                if ((string)$key === $name) {
-                    return clone $instance;
-                }
-            }
-        }
-        return false;
-    }
-    
-    /*
-     *  (array) getInstances() - Return the clones of all instances.
-     *  
-     *  $type  0 -> Return all instances
-     *         1 -> Return official instances
-     *         2 -> Return original instances
-     */
-    public function getInstances($type = 0) {
-        $type = abs((int)$type) % 3;
-        $ret = array();
-        foreach ($this->instances as $attr => $keys) {
-            if (
-                $type === 0 ||
-                $type === 1 && $attr === 'official'   ||
-                $type === 2 && $attr === 'original'
-            ) {
-                foreach ($keys as $key => $instance) {
-                    $ret[$key] = clone $instance;
-                }
-            }
-        }
-        return $ret;
-    }
-    
-    /**************************/
-    /**** Internal Methods ****/
-    /**************************/
-    
-    /*
-     *  (mixed) __call() - You can call the methods in UltimateOAuth class.
-     */
-    public function __call(
-        $name, // Method name.
-        $args  // Arguments.
-    ) {
-        
-        try {
-            
-            // These endpoints require official consumer_key
-            $post_ex = array(
-                '/friendships/accept.json',
-                '/friendships/deny.json',
-                '/friendships/accept_all.json',
-            );
-            
-            if (
-                !strcasecmp($name, 'get') ||
-                !strcasecmp($name, 'OAuthRequest') && (
-                    isset($args[1]) && !strcasecmp($args[1], 'GET') ||
-                    count($args) < 2
-                )
-            ) {
-                
-                /*
-                 *  GET request
-                 */
-                
-                // First argument is necessary
-                if (!isset($args[0])) {
-                    throw new InvalidArgumentException('First argument is necessary.');
-                }
-                
-                // Get endpoint
-                $elements = UltimateOAuthModule::parse_uri($args[0]);
-                $endpoint = $elements['path'];
-                
-                // Create table
-                $table = array_keys(self::getOfficialKeys());
-                
-                // Count up
-                if (!isset($this->current['GET'][$endpoint])) {
-                    $this->current['GET'][$endpoint] = 0;
-                } else {
-                    $this->current['GET'][$endpoint]++;
-                }
-                
-                // If the key doesn't exist, reset it to 0
-                if (!isset($table[$this->current['GET'][$endpoint]])) {
-                    $this->current['GET'][$endpoint] = 0;
-                }
-                
-                // Select instance
-                $obj = $this->instances['official'][$table[$this->current['GET'][$endpoint]]];
-                
-                // Return result
-                return call_user_func_array(array($obj, $name), $args);
-                
-            } elseif (
-                !strcasecmp($name, 'post') ||
-                !strcasecmp($name, 'OAuthRequest') && isset($args[1]) && !strcasecmp($args[1], 'POST') ||
-                !strcasecmp($name, 'OAuthRequestMultipart')
-            ) {
-                
-                /*
-                 *  POST request
-                 */
-                
-                // Initialize if necessary
-                if ($this->current['POST'] === null) {
-                    if ($this->instances['original']) {
-                        reset($this->instances['original']);
-                        $this->current['POST'] = array('original', key($this->instances['original']));
+        /**
+         * Login.
+         * 
+         * @access public
+         * @param  string  $username       screen_name or E-mail address.
+         * @param  string  $password
+         * @param  boolean [$return_array] Whether return responses as array,
+         *                                 or if all successful as boolean.
+         *                                 FALSE(Return Boolean) as default.
+         * @param  boolean [$sync]         Whether synchronously do all jobs,
+         *                                 or asynchronously do by UltimateOAuthMulti class.
+         *                                 FALSE(By UltimateOAuthMulti) as default.
+         * @return mixed
+         */
+        public function login($username, $password, $return_array = false, $sync = false) {
+            if ($sync) {
+                $keys = $this->instances['original'] + $this->instances['official'] + $this->instances['signup'];
+                $res = array();
+                foreach ($keys as $i => $uo) {
+                    if (isset($fail)) {
+                        $res[$i] = clone $fail;
                     } else {
-                        reset($this->instances['official']);
-                        $this->current['POST'] = array('official', key($this->instances['official']));
+                        $r = $uo->directGetToken($username, $password);
+                        if (isset($r->errors) && $r->errors[0]->message === 'Wrong username or password.') {
+                            $fail = $r;
+                        }
+                        $res[$i] = $r;
                     }
                 }
-                
-                // Select instance
-                list($app_type, $app_name) = $this->current['POST'];
-                $obj = $this->instances[$app_type][$app_name];
-                
-                // Judge if official consumer_key necessary
-                foreach ($post_ex as $ex) {
-                    if (strpos($args[0], $ex) !== false) {
-                        $obj = reset($this->instances['official']);
-                        break;
-                    }
-                }
-                
-                // Return result
-                return call_user_func_array(array($obj, $name), $args);
-                
             } else {
+                $uom = new UltimateOAuthMulti;
+                foreach ($this->instances as &$keys) {
+                    foreach ($keys as &$instance) {
+                        $uom->enqueue($instance, 'directGetToken', $username, $password);
+                    }
+                }
+                $res = array_combine(
+                    array_keys($this->instances['original'] + $this->instances['official'] + $this->instances['signup']),
+                    $uom->execute()
+                );
+            }
+            if (!$return_array) {
+                foreach ($res as $r) {
+                    if (isset($r->errors)) {
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                return $res;
+            }
+        }
+        
+        /**
+         * @access public
+         * @param  string $name  The name you registered.
+         * @return mixed         Return the clone of instance specified by name or FALSE.
+         */
+        public function getInstance($name) {
+            $arr = $this->instances['original'] + $this->instances['official'] + $this->instances['signup'];
+            $count = count($arr);
+            for ($i = 0; $i < $count; $i++) {
+                $tmp = array_slice($arr, $i, 1, true);
+                if (isset($tmp[$name])) {
+                    return clone $tmp[$name];
+                }
+            }
+            return false;
+        }
+        
+        /*
+         *  (array) getInstances() - Return the clones of all instances.
+         *  
+         *  $type  0 -> Return all instances
+         *         1 -> Return official instances
+         *         2 -> Return original instances
+         *         3 -> Return sign-up  instances
+         */
+        public function getInstances($type = 0) {
+            $type = abs((int)$type) % 4;
+            $ret = array();
+            foreach ($this->instances as $attr => $keys) {
+                if (
+                    $type === 0                         ||
+                    $type === 1 && $attr === 'official' ||
+                    $type === 2 && $attr === 'original' ||
+                    $type === 3 && $attr === 'signup'
+                ) {
+                    foreach ($keys as $key => $instance) {
+                        $ret[$key] = clone $instance;
+                    }
+                }
+            }
+            return $ret;
+        }
+        
+        /**************************/
+        /**** Internal Methods ****/
+        /**************************/
+        
+        /**
+         * You can call the methods in UltimateOAuth class.
+         * 
+         * @magic
+         * @access public
+         * @param  string $name
+         * @param  array  $args
+         * @return mixed
+         */
+        public function __call($name, $args) {
+            
+            try {
                 
-                throw new BadMethodCallException("Failed to call '{$name}'.");
+                // these endpoints require sign-up key
+                $post_ex1 = array(
+                    '/account/generate',
+                );
+                // these endpoints require official consumer_key
+                $post_ex2 = array(
+                    '/friendships/accept',
+                    '/friendships/deny',
+                    '/friendships/accept_all',
+                );
+                
+                if (
+                    !strcasecmp($name, 'get') ||
+                    !strcasecmp($name, 'OAuthRequest') && (
+                        isset($args[1]) && !strcasecmp($args[1], 'GET') ||
+                        count($args) < 2
+                    )
+                ) {
+                    /* GET request */
+                    
+                    // first argument is necessary
+                    if (!isset($args[0])) {
+                        throw new InvalidArgumentException('First argument is necessary.');
+                    }
+                    // get endpoint
+                    $elements = UltimateOAuthModule::parseUri($args[0]);
+                    $endpoint = $elements['path'];
+                    // create table
+                    $table = array_keys(self::getOfficialKeys());
+                    // count up
+                    if (!isset($this->current['GET'][$endpoint])) {
+                        $this->current['GET'][$endpoint] = 0;
+                    } else {
+                        $this->current['GET'][$endpoint]++;
+                    }
+                    // if the key doesn't exist, reset it to 0
+                    if (!isset($table[$this->current['GET'][$endpoint]])) {
+                        $this->current['GET'][$endpoint] = 0;
+                    }
+                    // select instance
+                    $obj = $this->instances['official'][$table[$this->current['GET'][$endpoint]]];
+                    // return result
+                    return call_user_func_array(array($obj, $name), $args);
+                    
+                } elseif (
+                    !strcasecmp($name, 'post') ||
+                    !strcasecmp($name, 'OAuthRequest') && isset($args[1]) && !strcasecmp($args[1], 'POST') ||
+                    !strcasecmp($name, 'OAuthRequestMultipart')
+                ) {
+                    /* POST request */
+                    
+                    // initialize if necessary
+                    if ($this->current['POST'] === null) {
+                        if ($this->instances['original']) {
+                            $this->setCurrent(array_rand($this->instances['original']));
+                        } else {
+                            $this->setCurrent(array_rand($this->instances['official']));
+                        }
+                    }
+                    // select instance
+                    list($app_type, $app_name) = $this->current['POST'];
+                    $obj = $this->instances[$app_type][$app_name];
+                    do {
+                        // judge if sign-up consumer_key necessary
+                        foreach ($post_ex1 as $ex) {
+                            if (strpos($args[0], $ex) !== false) {
+                                $obj = $this->instances[array_rand($this->instances['signup'])];
+                                break 2;
+                            }
+                        }
+                        // judge if official consumer_key necessary
+                        foreach ($post_ex2 as $ex) {
+                            if (strpos($args[0], $ex) !== false) {
+                                $obj = $this->instances[array_rand($this->instances['official'])];
+                                break 2;
+                            }
+                        }
+                    } while (false);
+                    // return result
+                    return call_user_func_array(array($obj, $name), $args);
+                    
+                } else {
+                    
+                    throw new BadMethodCallException("Failed to call '{$name}'.");
+                    
+                }
+                
+            } catch (Exception $e) {
+                
+                // return an error object
+                return UltimateOAuthModule::createErrorObject($e->getMessage());
             
             }
-            
-        } catch (Exception $e) {
-            
-            // Return an error object
-            return UltimateOAuthModule::createErrorObject($e->getMessage());
         
         }
-    
+        
     }
     
-    /*
-     *  (array) getOfficialKeys() - Let's take advantage of leaked consumer_key 
-     */
-    public static function getOfficialKeys($include_signup = false) {
-        $ret = array(
-            'Twitter for iPhone' => array(
-                'consumer_key'    => 'IQKbtAYlXLripLGPWd0HUA',
-                'consumer_secret' => 'GgDYlkSvaPxGxC4X8liwpUoqKwwr3lCADbz8A7ADU',
-            ),
-            'Twitter for Android' => array(
-                'consumer_key'    => '3nVuSoBZnx6U4vzUxf5w',
-                'consumer_secret' => 'Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys',
-            ),
-            'Twitter for iPad' => array(
-                'consumer_key'    => 'CjulERsDeqhhjSme66ECg',
-                'consumer_secret' => 'IQWdVyqFxghAtURHGeGiWAsmCAGmdW3WmbEx6Hck',
-            ),
-            'Twitter for Mac' => array(
-                'consumer_key'    => '3rJOl1ODzm9yZy63FACdg',
-                'consumer_secret' => '5jPoQ5kQvMJFDYRNE8bQ4rHuds4xJqhvgNJM4awaE8',
-            ),
-            'Twitter for Windows Phone' => array(
-                'consumer_key'    => 'yN3DUNVO0Me63IAQdhTfCA',
-                'consumer_secret' => 'c768oTKdzAjIYCmpSNIdZbGaG0t6rOhSFQP0S5uC79g',
-            ),
-            'TweetDeck' => array(
-                'consumer_key'    => 'yT577ApRtZw51q4NPMPPOQ',
-                'consumer_secret' => '3neq3XqN5fO3obqwZoajavGFCUrC42ZfbrLXy5sCv8',
-            ),
-        );
-        // This doesn't have permisson to access direct messages
-        if ($include_signup) {
-            $ret += array(
-                'Twitter for Android Sign-Up' => array(
-                    'consumer_key'    => 'RwYLhxGZpMqsWZENFVw',
-                    'consumer_secret' => 'Jk80YVGqc7Iz1IDEjCI6x3ExMSBnGjzBAH6qHcWJlo',
-                )
+}
+
+/**
+ * UltimateOAuthModule
+ *
+ * Module static method class. 
+ */
+if (!class_exists('UltimateOAuthModule')) {
+    
+    class UltimateOAuthModule {
+        
+        /**
+         * Natcasesort and return array.
+         * 
+         * @static
+         * @access public
+         * @param  array  $arr
+         * @return array  Sorted array.
+         */
+        public static function nksort($arr) {
+            uksort($arr, 'strnatcmp');
+            return $arr;
+        }
+        
+        /**
+         * For PHP 5.2 bug.
+         * 
+         * @static
+         * @access public
+         * @param  string $str
+         * @return string      Truely rawurlencoded string.
+         */
+        public static function enc($str) {
+            return str_replace('%7E', '~', rawurlencode($str));
+        }
+        
+        /**
+         * Combine keys and values with "=".
+         * 
+         * @static
+         * @access public
+         * @param  array  $arr
+         * @return array  Pairized array.
+         */
+        public static function pairize($arr) {
+            $ret = array();
+            foreach ($arr as $key => $value) {
+                $ret[] = $key . '=' . $value;
+            }
+            return $ret;
+        }
+        
+        /**
+         * Safe casting to string.
+         * 
+         * @static
+         * @access public
+         * @param  array  $var
+         * @return string      Casted value.
+         */
+        public static function stringify($var) {
+            return
+                (
+                    !is_array($var) &&
+                    !is_resource($var) &&
+                    (!is_object($var) || method_exists($var, '__toString'))
+                ) ? 
+                (string) $var : 
+                ''
+            ;
+        }
+        
+        /**
+         * Safe casting to 1D array.
+         * 
+         * @static
+         * @access public
+         * @param  array  $var
+         * @return string      Casted value.
+         */
+        public static function arrayfy($var) {
+            $ret = array();
+            if (is_array($var) || is_object($var)) {
+                foreach ($var as $k => $v) {
+                    $ret[$k] = self::stringify($v);
+                }
+            }
+            return $ret;
+        }
+        
+        /**
+         * Create an error object.
+         * 
+         * @static
+         * @access public
+         * @param  string   $msg
+         * @param  integer  [$code] -1 as default.
+         * @return stdClass         An error object.
+         */
+        public static function createErrorObject($msg, $code = -1) {
+            return (object)array(
+                'errors' => array(
+                    (object)array(
+                        'code' => $code,
+                        'message' => $msg,
+                    ),
+                ),
             );
         }
-        return $ret;
-    }
-
-}
- 
- 
- 
- 
-/*  
- *  UltimateOAuthModule - Module static method class. 
- */ 
-class UltimateOAuthModule {
-    
-    /*
-     *  (array) nksort() - Sort by natural order and return it.
-     */
-    public static function nksort($arr) {
-        uksort($arr, 'strnatcmp');
-        return $arr;
-    }
-    
-    /*
-     *  (string) enc() - For helping PHP 5.2 bugs.
-     */
-    public static function enc($str) {
-        return str_replace('%7E', '~', rawurlencode($str));
-    }
-    
-    /*
-     *  (array) pairize() - Combine keys and values with "=".
-     */
-    public static function pairize($arr) {
-        $ret = array();
-        foreach ($arr as $key => $value) {
-            $ret[] = $key . '=' . $value;
-        }
-        return $ret;
-    }
-    
-    /*
-     *  (string) stringify() - Safe casting to string.
-     */
-    public static function stringify($var) {
-        return
-            (
-                !is_array($var) &&
-                !is_resource($var) &&
-                (!is_object($var) || method_exists($var, '__toString'))
-            ) ? 
-            (string) $var : 
-            ''
-        ;
-    }
-    
-    /*
-     *  (array) arrayfy() - Safe casting to 1D array.
-     */
-    public static function arrayfy($var) {
-        $ret = array();
-        if (is_array($var) || is_object($var)) {
-            foreach ($var as $k => $v) {
-                $ret[$k] = self::stringify($v);
+        
+        /**
+         * Output error in STDOUT.
+         * 
+         * @static
+         * @access public
+         * @param  integer $errno
+         * @param  integer $errstr
+         * @param  integer $errline
+         * @param  integer $errfile
+         * @param  boolean          True for supressing native error handling.
+         */
+        public static function errorHandler($errno, $errstr, $errline, $errfile) {
+            switch ($errno) {
+                case E_ERROR:
+                    $errno = 'Fatal error'; break;
+                case E_WARNING:
+                    $errno = 'Warning'; break;
+                case E_PARSE:
+                    $errno = 'Parse error'; break;
+                case E_NOTICE:
+                    $errno = 'Notice'; break;
+                default:
+                    $errno = 'Unknown error';
             }
+            printf('PHP %s:  %s in %s on line %d' . PHP_EOL . 
+                $errno, $errstr, $errfile, $errline
+            );
+            return true;
         }
-        return $ret;
-    }
-    
-    /*
-     *  (stdClass) createErrorObject() - Return an error object.
-     */
-    public static function createErrorObject($msg, $code = -1) {
-        return (object)array(
-            'errors' => array(
-                (object)array(
-                    'code' => $code,
-                    'message' => $msg,
-                ),
-            ),
-        );
-    }
-    
-    /*
-     *  (bool) errorHandler() - Output error in STDOUT.
-     */
-    public static function errorHandler($errno, $errstr, $errline, $errfile) {
-        switch($errno) {
-            case E_ERROR:
-                $errno = 'Fatal error'; break;
-            case E_WARNING:
-                $errno = 'Warning'; break;
-            case E_PARSE:
-                $errno = 'Parse error'; break;
-            case E_NOTICE:
-                $errno = 'Notice'; break;
-            default:
-                $errno = 'Unknown error';
-        }
-        printf('PHP %s:  %s in %s on line %d' . PHP_EOL . 
-            $errno, $errstr, $errfile, $errline
-        );
-        return true;
-    }
-    
-    /*
-     *  (array) parse_uri() - A wrapper of parse_url().
-     */
-    public static function parse_uri($uri) {
-        $uri = self::stringify($uri);
-        if ($uri === '' || ($elements = parse_url($uri)) === false) {
-            throw new InvalidArgumentException('Invalid URI.');
-        }
-        if (!isset($elements['host'])) {
-            $elements['host']   = UltimateOAuthConfig::DEFAULT_HOST;
-            $elements['scheme'] = UltimateOAuthConfig::DEFAULT_SCHEME;
-            $elements['path']   = preg_replace('@^/++@', '', $elements['path']);
-            if (
-                strpos($elements['path'], '1/')   !== 0 &&
-                strpos($elements['path'], '1.1/') !== 0 &&
-                strpos($elements['path'], 'i/')   !== 0
-            ) {
+        
+        /**
+         * A wrapper of parse_url().
+         * 
+         * @static
+         * @access public
+         * @param  string $uri
+         * @return mixed       An array of parsed elements, or FALSE. 
+         */
+        public static function parseUri($uri) {
+            $uri = self::stringify($uri);
+            if ($uri === '' || ($elements = parse_url($uri)) === false) {
+                throw new InvalidArgumentException('Invalid URI.');
+            }
+            if (!isset($elements['host'])) {
+                $elements['host']   = UltimateOAuthConfig::DEFAULT_HOST;
+                $elements['scheme'] = UltimateOAuthConfig::DEFAULT_SCHEME;
+                $elements['path']   = preg_replace('@^/++@', '', $elements['path']);
                 if (
-                    strpos($elements['path'], 'activity/')  === 0 ||
-                    strpos($elements['path'], '/activity/') !== false
+                    strpos($elements['path'], '1/')   !== 0 &&
+                    strpos($elements['path'], '1.1/') !== 0 &&
+                    strpos($elements['path'], 'i/')   !== 0
                 ) {
-                    $elements['path'] = '/' . UltimateOAuthConfig::DEFAULT_ACTIVITY_API_VERSION . '/' . $elements['path'];
-                } elseif (
-                    strpos($elements['path'], 'oauth/')  !== 0 &&
-                    strpos($elements['path'], 'oauth2/') !== 0
-                ) {
-                    $elements['path'] = '/' . UltimateOAuthConfig::DEFAULT_API_VERSION . '/' . $elements['path'];
+                    if (
+                        strpos($elements['path'], 'activity/')  === 0 ||
+                        strpos($elements['path'], '/activity/') !== false
+                    ) {
+                        $elements['path'] = '/' . UltimateOAuthConfig::DEFAULT_ACTIVITY_API_VERSION . '/' . $elements['path'];
+                    } elseif (strpos($elements['path'], 'oauth2/') === 0) {
+                        throw new LogicException('This library doesn\'t support OAuth 2 authentication flow.');
+                    } elseif(strpos($elements['path'], 'oauth/') === 0) {
+                        $elements['path'] = '/' . $elements['path'];
+                        $is_oauth = true;
+                    } else {
+                        $elements['path'] = '/' . UltimateOAuthConfig::DEFAULT_API_VERSION . '/' . $elements['path'];
+                    }
                 } else {
-                    $elements['path'] = '/' . $elements['path'];
-                    $is_oauth = true;
+                    $elements['path'] = '/'.$elements['path'];
                 }
-            } else {
-                $elements['path'] = '/'.$elements['path'];
+                if (!isset($is_oauth) && !preg_match('@\\.[^./]++$@', $elements['path'])) {
+                    $elements['path'] .= '.json';
+                }
+            } elseif (!isset($elements['path'])) {
+                $elements['path'] = '/';
             }
-            if (!isset($is_oauth) && !preg_match('@\\.\\w++$@', $elements['path'])) {
-                $elements['path'] .= '.json';
+            if (!isset($elements['query'])) {
+                $elements['query']  = '';
             }
-        } elseif (!isset($elements['path'])) {
-            $elements['path'] = '/';
+            return $elements;
         }
-        if (strpos($elements['path'], 'oauth2/') === 0) {
-            throw new Exception('This library doesn\'t support OAuth 2.');
+        
+        /**
+         * Let's take advantage of leaked consumer_key.
+         * 
+         * @static
+         * @access public
+         * @param  boolean [$include_signup] Whether contains sign-up keys.
+         *                                   (These doesn't have permisson to access direct messages.)
+         *                                   FALSE as default.
+         * @return array                     A 2D array of consumer_key information. 
+         */
+        public static function getOfficialKeys($include_signup = false) {
+            $ret = array(
+                'Twitter for iPhone' => array(
+                    'consumer_key'    => 'IQKbtAYlXLripLGPWd0HUA',
+                    'consumer_secret' => 'GgDYlkSvaPxGxC4X8liwpUoqKwwr3lCADbz8A7ADU',
+                ),
+                'Twitter for Android' => array(
+                    'consumer_key'    => '3nVuSoBZnx6U4vzUxf5w',
+                    'consumer_secret' => 'Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys',
+                ),
+                'Twitter for iPad' => array(
+                    'consumer_key'    => 'CjulERsDeqhhjSme66ECg',
+                    'consumer_secret' => 'IQWdVyqFxghAtURHGeGiWAsmCAGmdW3WmbEx6Hck',
+                ),
+                'Twitter for Mac' => array(
+                    'consumer_key'    => '3rJOl1ODzm9yZy63FACdg',
+                    'consumer_secret' => '5jPoQ5kQvMJFDYRNE8bQ4rHuds4xJqhvgNJM4awaE8',
+                ),
+                'Twitter for Windows Phone' => array(
+                    'consumer_key'    => 'yN3DUNVO0Me63IAQdhTfCA',
+                    'consumer_secret' => 'c768oTKdzAjIYCmpSNIdZbGaG0t6rOhSFQP0S5uC79g',
+                ),
+                'TweetDeck' => array(
+                    'consumer_key'    => 'yT577ApRtZw51q4NPMPPOQ',
+                    'consumer_secret' => '3neq3XqN5fO3obqwZoajavGFCUrC42ZfbrLXy5sCv8',
+                ),
+            );
+            if ($include_signup) {
+                $ret += array(
+                    'Twitter for Android Sign-Up' => array(
+                        'consumer_key'    => 'RwYLhxGZpMqsWZENFVw',
+                        'consumer_secret' => 'Jk80YVGqc7Iz1IDEjCI6x3ExMSBnGjzBAH6qHcWJlo',
+                    )
+                );
+            }
+            return $ret;
         }
-        if (!isset($elements['query'])) {
-            $elements['query']  = '';
-        }
-        return $elements;
+        
     }
-
+    
 }
- 
- 
- 
- 
-/*
- *  Check request to this file itself.
- */
+
+// Check request to this file itself.
 UltimateOAuthMulti::checkRequest();
