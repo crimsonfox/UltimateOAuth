@@ -1,6 +1,10 @@
 UltimateOAuth - changelog
 ========================
 
+5.2.2 (2013-09-06)
+- $xauth_info->consumer_key
+- $xauth_info->consumer_secret
+
 5.2.1 (2013-09-05)
 + Fixed rotation bugs
 

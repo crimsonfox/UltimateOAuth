@@ -4,7 +4,7 @@ UltimateOAuth
 
 [日本語](https://github.com/Certainist/UltimateOAuth/blob/master/README-Japanese.md)
 
-@Version: 5.2.1  
+@Version: 5.2.2  
 @Author : CertaiN  
 @License: BSD 2-Clause  
 @GitHub : http://github.com/certainist  
@@ -646,9 +646,7 @@ $uor->get('statuses/home_timeline');
 This library apply the header contents of  
 `x-twitter-new-account-oauth-access-token`, `x-twitter-new-account-oauth-secret`  
 as response properties.  
-You can use  
-`$response->consumer_key`, `$response->consumer_secret`,  
-`$response->access_token`, `$response->access_token_secret`.
+You can use `$response->access_token`, `$response->access_token_secret`.
 
 #### Sample code
 
@@ -659,8 +657,8 @@ You can use
 require_once('UltimateOAuth.php');
 
 // Get a sign-up instance
-$base = new UltimateOAuthRotate;
-$base = $base->getInstance('Twitter for Android Sign-Up');
+$uor = new UltimateOAuthRotate;
+$base = $uor->getInstance('Twitter for Android Sign-Up');
 
 // Authorize yourself
 $base->directGetToken('Your screen_name', 'Your password');
@@ -683,7 +681,8 @@ if (isset($res->errors)) {
 }
 
 // Test tweet
-$uo = new UltimateOAuth($res->consumer_key, $res->consumer_secret, $res->access_token, $res->access_token_secret);
+$tmp = $uor->getInstance('Twitter for Android');
+$uo = new UltimateOAuth($tmp->consumer_key, $tmp->consumer_secret, $res->access_token, $res->access_token_secret);
 $uo->post('statuses/update', 'status=HAHAHAHA!!!!');
 ```
 

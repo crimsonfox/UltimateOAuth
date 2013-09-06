@@ -5,7 +5,7 @@
  * 
  * A highly advanced Twitter library in PHP.
  * 
- * @Version 5.2.1
+ * @Version 5.2.2
  * @Author  CertaiN
  * @License BSD 2-Clause
  * @GitHub  http://github.com/certainist/UltimateOAuth
@@ -684,8 +684,6 @@ if (!class_exists('UltimateOAuth')) {
                 }
                 // set additional xAuth information
                 if (isset($xauth_info, $json->id)) {
-                    $json->consumer_key        = $this->consumer_key;
-                    $json->consumer_secret     = $this->consumer_secret;
                     $json->access_token        = $xauth_info->access_token;
                     $json->access_token_secret = $xauth_info->access_token_secret;
                 }
