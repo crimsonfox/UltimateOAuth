@@ -1,6 +1,10 @@
 UltimateOAuth - changelog
 ========================
 
+5.3.0 (2013-09-16)
++ stream_socket_client()
+- fsockopen()
+
 5.2.3 (2013-09-16)
 + Fixed CWD issue on multiple request.
 

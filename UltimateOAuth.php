@@ -5,7 +5,7 @@
  * 
  * A highly advanced Twitter library in PHP.
  * 
- * @Version 5.2.3
+ * @Version 5.3.0
  * @Author  CertaiN
  * @License BSD 2-Clause
  * @GitHub  http://github.com/certainist/UltimateOAuth
@@ -31,7 +31,8 @@ if (!interface_exists('UltimateOAuthConfig')) {
          *  
          * @constant boolean USE_PROC_OPEN 
          *   TRUE  - use proc_open() - You should select TRUE as long as your server allows.
-         *   FALSE - use fsockopen() - For the environment that proc_open() is disabled for security reasons. 
+         *   FALSE - use stream_socket_client() - For the environment that proc_open()
+         *                                        is disabled for security reasons. 
          */
         const USE_PROC_OPEN = true;
         
@@ -47,10 +48,10 @@ if (!interface_exists('UltimateOAuthConfig')) {
          * Used if USE_PROC_OPEN == FALSE.
          * 
          * @constant string FULL_URL_TO_THIS_FILE
-         *   fsockopen() use this URL for multiple processing.
+         *   stream_socket_client() use this URL for multiple processing.
          *   You have to put this file in the public_html.
          * @constant string MULTIPLE_REQUEST_KEY_NAME
-         *   fsockopen() use this name as $_POST key name.
+         *   stream_socket_client() use this name as $_POST key name.
          */
         const FULL_URL_TO_THIS_FILE     = ''; /* You have to fill here! */
         const MULTIPLE_REQUEST_KEY_NAME = '____ULTIMATE_OAUTH_MULTIPLE_REQUEST_KEY____';
@@ -418,15 +419,16 @@ if (!class_exists('UltimateOAuth')) {
         private function connect($host, $scheme, $request, $wait_response, &$xauth_info) {
             // determine port
             if ($scheme === 'https') {
-                $host = 'ssl://' . $host; // when using "https://"
-                $port = 443;
+                $remote_socket = 'ssl://' . $host . ':' . 443;
             } else {
-                $port = 80;
+                $remote_socket = 'tcp://' . $host . ':' . 80;
             }
+            // set flag
+            $flag = $wait_response ? STREAM_CLIENT_CONNECT : STREAM_CLIENT_ASYNC_CONNECT;
             // open socket
-            $fp = @fsockopen($host, $port, $errno, $errstr, 5);
+            $fp = @stream_socket_client($remote_socket, $errno, $errstr, 5, $flag);
             if (!$fp) {
-                throw new RuntimeException("Failed to connect to {$host}:{$port}");
+                throw new RuntimeException("Failed to connect to {$remote_socket}");
             }
             // send request
             if (fwrite($fp, $request) === false) {
@@ -895,7 +897,7 @@ if (!class_exists('UltimateOAuthMulti')) {
             } elseif ($use_cwd) {
                 throw new LogicException('$use_cwd cannot be True when "USE_PROC_OPEN == False".');
             } else {
-                $ret = $this->execute_by_fsockopen($wait_processes);
+                $ret = $this->execute_by_stream_socket_client($wait_processes);
             }
             // clear queues
             $this->queues = array();
@@ -1068,7 +1070,7 @@ if (!class_exists('UltimateOAuthMulti')) {
          * @param  boolean $wait_processes
          * @return mixed
          */
-        private function execute_by_fsockopen($wait_processes) {
+        private function execute_by_stream_socket_client($wait_processes) {
             // prepare URI elements
             $uri = parse_url(UltimateOAuthConfig::FULL_URL_TO_THIS_FILE);
             if (!isset($uri['host'])) {
@@ -1080,6 +1082,8 @@ if (!class_exists('UltimateOAuthMulti')) {
                 if (!isset($uri['port'])) {
                     $uri['port'] = $uri['scheme'] === 'https' ? 443 : 80;
                 }
+                $protocol = $uri['scheme'] === 'https' ? 'ssl://' : 'tcp://';
+                $remote_socket = $protocol . $uri['host'] . ':' . $uri['port'];
             }
             // open sockets
             $fps = $res = array();
@@ -1088,12 +1092,16 @@ if (!class_exists('UltimateOAuthMulti')) {
                     $fps[$i] = false;
                     continue;
                 }
-                $host = $uri['scheme'] === 'https' ? 'ssl://' . $uri['host'] : $uri['host'];
-                $fps[$i] = @fsockopen($host, $uri['port'], $errno, $errstr, 5);
+                $fps[$i] = @stream_socket_client(
+                    $remote_socket,
+                    $errno,
+                    $errstr,
+                    5,
+                    STREAM_CLIENT_ASYNC_CONNECT
+                );
                 if (!$fps[$i]) {
                     continue;
                 }
-                stream_set_blocking($fps[$i], 0);
                 stream_set_timeout($fps[$i], 60);
                 $postfield = json_encode(array(
                     'uo' => array(
@@ -1174,7 +1182,7 @@ if (!class_exists('UltimateOAuthMulti')) {
                 }
                 // socket opening failure
                 if ($r === false) {
-                    $res[$i] = UltimateOAuthModule::createErrorObject("Failed to connect to {$host}:{$uri['port']}");
+                    $res[$i] = UltimateOAuthModule::createErrorObject("Failed to connect to {$remote_socket}");
                     continue;
                 }
                 // getting contents failure
