@@ -315,7 +315,7 @@ $uo->post($endpoint, $params, $wait_response);
 
 ### UltimateOAuth::postMultipart()<br />UltimateOAuth::OAuthRequestMultipart()
 
-主に `statuses/update_with_media` に対して用いる。  
+主に `statuses/update_with_media` に対して用いられます。  
 **postMultipart()** と **OAuthRequestMultipart()** は完全に同一のものです。
 
 ```php
@@ -446,7 +446,7 @@ $uom->enqueue($uo, $method, $arg1, $arg2, ...);
 - *(mixed)* *__\[$arg1\]__*, *__\[$arg2\]__*, *__\[...\]__*  
   例: `'statuses/update', 'status=TestTweet'`
 
-#### Note
+#### 注意
 
 バイナリデータを引数に含むことは出来ません。  
 その場合は **`@`** プレフィックスをつけてファイルへのパスを指定するようにしてください。  
