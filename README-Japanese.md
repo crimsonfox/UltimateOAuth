@@ -1,40 +1,44 @@
-**警告：　この日本語ドキュメントは古いです。そのうち更新します。**
-
 UltimateOAuth
 =============
 *__非常に高機能な__ PHPのTwitterライブラリです。*
 
 [English](https://github.com/Certainist/UltimateOAuth/blob/master/README.md)
 
-@Version: 5.1.7  
+@Version: 5.2.3  
 @Author : CertaiN  
 @License: BSD 2-Clause  
 @GitHub : http://github.com/certainist  
 
 
-## \[動作環境\]
-- **5.2.0** 以降。
-- **cURL** に依存しない。
-- 他のファイルに依存しない。このファイル1つでOK。
-- UNIXとWindowsどちらでもOK。
+## \[特長\]
 
+- PHP **5.2.0** 以降で動作。
+- **cURL** や他のライブラリに依存しない。
+- UNIXとWindowsを両方サポート。
+- **同期リクエスト・非同期リクエスト** を両方サポート。
+- **疑似xAuth認証** をサポート。
+- **アカウント作成** をサポート。
+- **API制限回避** を簡単に実現可能。
 
 ## \[クラス・メソッド一覧\]
 
 ### UltimateOAuth
 
 ```php
-$uo = new UltimateOAuth( $consumer_key, $consumer_secret, $access_token="", $access_token_secret="" );
+$uo = new UltimateOAuth(
+    $consumer_key = "", $consumer_secret = "", $access_token = "", $access_token_secret = ""
+);
 
-(stdClass|Array)      $uo->get                   ( $endpoint,                $params=array()                      );
-(stdClass|      Void) $uo->post                  ( $endpoint,                $params=array(), $wait_response=true );
-(stdClass|Array|Void) $uo->OAuthRequest          ( $endpoint, $method="GET", $params=array(), $wait_response=true );
-(stdClass|      Void) $uo->OAuthRequestMultipart ( $endpoint,                $params=array(), $wait_response=true );
+$uo->get                   ($endpoint,                  $params = array()                       );
+$uo->post                  ($endpoint,                  $params = array(), $wait_response = true);
+$uo->postMultipart         ($endpoint,                  $params = array(), $wait_response = true);
+$uo->OAuthRequest          ($endpoint, $method = "GET", $params = array(), $wait_response = true);
+$uo->OAuthRequestMultipart ($endpoint,                  $params = array(), $wait_response = true);
 
-(stdClass) $uo->directGetToken ( $username, $password );
+$uo->directGetToken ($username, $password);
 
-(String) $uo->getAuthorizeURL    ( $force_login=false );
-(String) $uo->getAuthenticateURL ( $force_login=false );
+$uo->getAuthorizeURL    ($force_login = false);
+$uo->getAuthenticateURL ($force_login = false);
 ```
 
 ### UltimateOAuthMulti
@@ -42,24 +46,26 @@ $uo = new UltimateOAuth( $consumer_key, $consumer_secret, $access_token="", $acc
 ```php
 $uom = new UltimateOAuthMulti;
 
-(Void)  $uom->enqueue ( &$uo, $method, $arg1, $arg2, $arg3, ... );
-(Array) $uom->execute ();
+$uom->enqueue (&$uo, $method, $arg1, $arg2, $arg3, ...);
+$uom->execute ($wait_processes = true, $use_cwd = false);
 ```
 
 ### UltimateOAuthRotate
 
-**UltimateOAuthRotate** クラスは **__call()** メソッドを用いることにより、 **UltimateOAuth** クラスのメソッドのうち `get`, `post`, `OAuthRequest`, `OAuthRequestMultipart` には対応しています。
+**UltimateOAuthRotate** クラスは **__call()** メソッドを用いることにより、 **UltimateOAuth** クラスのメソッドのうち  
+`get()`, `post()`, `postMultipart()`, `OAuthRequest()`, `OAuthRequestMultipart()`  
+には対応しています。
 
 ```php
 $uor = new UltimateOAuthRotate;
 
-(mixed)              $uor->__call       ( $name, $arguments );
+$uor->__call       ($name, $arguments);
 
-(Bool)               $uor->register     ( $name, $consumer_key, $consumer_secret );
-(Bool|Array)         $uor->login        ( $username, $password, $return_array=false );
-(Bool)               $uor->setCurrent   ( $name );
-(UltimateOAuth|Bool) $uor->getInstance  ( $name );
-(Array)              $uor->getInstances ( );
+$uor->register     ($name, $consumer_key, $consumer_secret);
+$uor->login        ($username, $password, $return_array = false, $successively = false);
+$uor->setCurrent   ($name);
+$uor->getInstance  ($name);
+$uor->getInstances ($type);
 ```
 
 ------------------------------------------------------------------
@@ -139,7 +145,7 @@ if (!isset($_SESSION['uo'])) {
 $uo = $_SESSION['uo'];
 
 // oauth_verifierパラメータが存在するかチェック
-if (!isset($_GET['oauth_verifier']) || !is_string($_GET['oauth_verifier'])) {
+if (!isset($_GET['oauth_verifier'])) {
     die('Error[-1]: No oauth_verifier');
 }
 
@@ -196,7 +202,8 @@ $uo = new UltimateOAuth($consumer_key, $consumer_secret, $access_token, $access_
 ```
 
 **備考2:**  
-認証済みのUltimateOAuthオブジェクトを文字列として保存・復元したい場合は、  `serialize()` 関数と `unserialize()` 関数をご利用ください。
+認証済みのUltimateOAuthオブジェクトを文字列として保存・復元したい場合は、  
+`serialize()` 関数と `unserialize()` 関数をご利用ください。
 
 
 ------------------------------------------------------------------
@@ -206,82 +213,88 @@ $uo = new UltimateOAuth($consumer_key, $consumer_secret, $access_token, $access_
 
 ### UltimateOAuth::__construct()
 
+UltimateOAuthインスタンスを生成します。
+
 ```php
-<?php
+$uo = new UltimateOAuth;
+$uo = new UltimateOAuth($consumer_key, $consumer_secret);
 $uo = new UltimateOAuth($consumer_key, $consumer_secret, $access_token, $access_token_secret);
 ```
 
 #### 引数
 
-- *__$consumer\_key__*, *__$consumer\_secret__*  
-  **必須** 。
-  
-- *__$access\_token__*, *__$access\_token__*  
-  あとでユーザーに認証させる場合は不要。
+- *(string)* *__\[$consumer\_key\]__*  
+  省略された場合は公式アプリからランダムなものが選択されます。
+- *(string)* *__\[$consumer\_secret\]__*  
+  省略された場合は公式アプリからランダムなものが選択されます。
+- *(string)* *__\[$access\_token\]__*  
+  後で認証を行わない場合はここで指定が必要です。
+- *(string)* *__\[$access\_token\]__*  
+  後で認証を行わない場合はここで指定が必要です。
 
 =========================================
 
 ### UltimateOAuth::OAuthRequest()
 
+リクエストにはこのメソッドが主体として使われます。
+
 ```php
-<?php
-$uo->OAuthRequest($endpoints, $method, $params, $wait_response);
+$uo->OAuthRequest($endpoint, $method = "GET", $params = array(), $wait_response = true);
 ```
 
 #### 引数
 
-- *__$endpoints__*  
-  [API Documentation](https://dev.twitter.com/docs/api/1.1) を参照。  
+- *(string)* *__$endpoint__*  
+  [APIドキュメント](https://dev.twitter.com/docs/api/1.1)をご覧ください。  
   例:  
   `statuses/update`, `1.1/statuses/update`, `https://api.twitter.com/1.1/statuses/update.json`
   
-- *__$method__*  
-  `GET` か `POST`。 大文字小文字区別なし。
+- *(string)* *__\[$method\]__*  
+  `POST` または `GET` 。 大文字小文字を区別しません。 デフォルトは `GET` です。
   
-- *__$params__*  
-  **クエリ文字列** (URLエンコードされていない) か **連想配列** 。  
+- *(mixed)* *__\[$params\]__*  
+  **クエリ文字列** または **連想配列** 。  
   例:
   ```php
-  <?php
-  $params = 'status=テストツイート';
-  $params = array('status' => 'テストツイート');
+  $params = 'status=TestTweet';
+  $params = array('status' => 'TestTweet');
   ```
   ファイルをアップロードするには:
   ```php
-  <?php
-  $params = '@image='.$filename;
+  $params = '@image=' . $filename;
   $params = array('@image' => $filename);
   $params = array('image' => base64_encode(file_get_contents($filename)));
   ```
   
-  **備考:**  
-  このメソッドは `statuses/update_with_media` には適用できません。  
-  **UltimateOAuth::OAuthRequestMultipart()** を代わりに使ってください。
+  **注意:**  
+  `statuses/update_with_media` にはこのメソッドを用いることは出来ません。  
+  代わりに **UltimateOAuth::postMultipart()** をご使用ください。
   
-- *__$wait\_resposne__*  
-  デフォルト値 **TRUE** 。
-  以下の記述を読んでください。
+- *(boolean)* *__\[$wait\_resposne\]__*  
+  デフォルトは `TRUE` です。  
+  詳細は下記。
 
 #### 返り値
 
-- 成功したとき、デコードされたJSONを返す。  
-  通常これは **stdClass** となる。  
-  一部のエンドポイントは **配列** を返す。  
+- リクエストが成功した場合、デコードされたJSONデータが返されます。  
+  多くの場合は **stdClass** として返されます。  
+  一部のエンドポイントは **配列** として返されます。  
   例: `statuses/home_timeline`, `users/lookup`  
-  一部のエンドポイントは **クエリ文字列** を取得するが、 自動的に **stdClass** に変換される。  
+  一部のエンドポイントは **クエリ文字列** を取得しますが、自動的に **stdClass** に変換されます。  
   例: `oauth/request_token`, `oauth/access_token`
   
-- 失敗したとき、 **エラーオブジェクト** を返す。 それは下記のような構造を持つ。
+- 失敗時には **エラーオブジェクト** が返されます。  
+  下記のような構造を持っています。
   
-  > - `(int) $response->errors[0]->code`  
-  >   **HTTPステータスコード** 。 エラーコードではない。  
-  >   全てのエラーコードはHTTPステータスコードで上書きされる。  
-  >   ローカルで起こったエラーに関しては、 **-1** が設定される。
+  > - *(integer)* `$response->errors[0]->code`  
+  >   **HTTPステータスコード** 。 エラーコードでは無い。  
+  >   既に存在しているエラーコードはHTTPステータスコードで上書きされます。  
+  >   ローカルでエラーが発生した場合、多くの場合は `-1` となります。
   >   
-  > - `(string) $response->errors[0]->message`  
+  > - *(string)* `$response->errors[0]->message`  
   >   エラーメッセージ。
   
-- `$wait_response` がFALSEに設定されると、常に **NULL** を返す。
+- `$wait_response` が `FALSE` のとき、 レスポンスを待たず直ちに `NULL` を返します。
 
 
 =========================================
@@ -289,49 +302,49 @@ $uo->OAuthRequest($endpoints, $method, $params, $wait_response);
 
 ### UltimateOAuth::get()<br />UltimateOAuth::post()
 
-```php
-<?php
-$uo->get($endpoints, $params);
-$uo->post($endpoints, $params, $wait_response);
-```
-
 **UltimateOAuth::OAuthRequest()** のラッパーメソッド。
+
+```php
+$uo->get($endpoint, $params);
+$uo->post($endpoint, $params, $wait_response);
+```
 
 
 =========================================
 
 
-### UltimateOAuth::OAuthRequestMultipart()
+### UltimateOAuth::postMultipart()<br />UltimateOAuth::OAuthRequestMultipart()
+
+主に `statuses/update_with_media` に対して用いる。  
+**postMultipart()** と **OAuthRequestMultipart()** は完全に同一のものです。
 
 ```php
-<?php
-$uo->OAuthRequestMultipart($endpoints, $params, $wait_response);
+$uo->postMultipart($endpoint, $params, $wait_response);
+$uo->OAuthRequestMultipart($endpoint, $params, $wait_response);
 ```
-
-主に `statuses/update_with_media` に対して用いる。
 
 
 #### 引数
 
-- *__$endpoints__*  
+- *(string)* *__$endpoint__*  
   例: `statuses/update_with_media`
   
-- *__$params__*  
+- *(string)* *__\[$params\]__*  
   例:
   ```php 
-  <?php
-  $params = '@media[]='.$filename;
+  $params = '@media[]=' . $filename;
   $params = array('@media[]' => $filename);
   $params = array('media[]' => file_get_contents($filename));
   ```
   
-- *__$wait\_response__*  
-  **UltimateOAuth::OAuthRequest()** のものと同じ。
-  デフォルト値 **TRUE** 。
+- *(boolean)* *__\[$wait\_response\]__*  
+  **UltimateOAuth::OAuthRequest()** のものと同一です。  
+  デフォルトは `TRUE` です。
+  
   
 #### 返り値
 
-- **UltimateOAuth::OAuthRequest()** のものと同じ。
+- **UltimateOAuth::OAuthRequest()** のものと同一です。
 
 
 =========================================
@@ -340,24 +353,23 @@ $uo->OAuthRequestMultipart($endpoints, $params, $wait_response);
 ### UltimateOAuth::directGetToken()
 
 あたかもOAuth認証を **xAuth** 認証のように行えるメソッドです。  
-私はこれを **疑似xAuth** 認証と呼んでいます。
+これは **疑似xAuth** 認証と呼ばれます。
 
 ```php
-<?php
 $uo->directGetToken($username, $password);
 ```
 
 #### 引数
  
-- *__$username__*  
-  スクリーンネーム(screen_name)またはEメールアドレス。
+- *(string)* *__$username__*  
+  *スクリーンネーム* またはEメールアドレス。
   
-- *__$password__*  
+- *(string)* *__$password__*  
   パスワード。
   
 #### 返り値
 
-- `oauth/access_token` を用いたときの **UltimateOAuth::OAuthRequest()** のものと同じ。
+- `oauth/access_token` を用いたときの **UltimateOAuth::OAuthRequest()** のものと同一です。
 
 
 =========================================
@@ -373,9 +385,9 @@ $uo->getAuthorizeURL($force_login);
 
 #### 引数
 
-- *__$force\_login__*  
+- *(boolean)* *__$force\_login__*  
   既にログイン済みのユーザーを再認証させるかどうか。  
-  デフォルト値 **FALSE** 。
+  デフォルトは **FALSE** です。
   
 #### 返り値
 
@@ -400,8 +412,9 @@ $uo->getAuthorizeURL($force_login);
 
 ### UltimateOAuthMulti::__construct()
 
+UltimateOAuthMultiインスタンスを生成します。
+
 ```php
-<?php
 $uom = new UltimateOAuthMulti;
 ```
 
@@ -411,10 +424,9 @@ $uom = new UltimateOAuthMulti;
 
 ### UltimateOAuthMulti::enqueue()
 
-新しいジョブを追加。
+新しいジョブを追加します。
 
 ```php
-<?php
 $uom->enqueue($uo, $method, $arg1, $arg2, ...);
 ```
 
@@ -424,40 +436,50 @@ $uom->enqueue($uo, $method, $arg1, $arg2, ...);
 
 #### 引数
 
-- *__$uo__*  
-  **UltimateOAuth** オブジェクト。 **参照渡し** 。
+- *(UltimateOAuth)* *__&$uo__*  
+  **UltimateOAuth** オブジェクト。 **参照渡し** 。  
   
-- *__$method__*  
+- *(string)* *__$method__*  
+  メソッド名。 HTTPメソッドではなく **クラスメソッド** を意味します。  
   例: `post`
   
-- *__$arg1__*, *__$arg2__*, *__...__*  
+- *(mixed)* *__\[$arg1\]__*, *__\[$arg2\]__*, *__\[...\]__*  
   例: `'statuses/update', 'status=TestTweet'`
 
+#### Note
+
+バイナリデータを引数に含むことは出来ません。  
+その場合は **`@`** プレフィックスをつけてファイルへのパスを指定するようにしてください。  
+例: `'status=test&@media[]=test.jpg'`
+  
 =========================================
   
   
 ### UltimateOAuthMulti::execute()
 
-全てのジョブを実行。  
-実行後ジョブはリセットされる。
+全てのジョブを実行します。  
+実行後ジョブはすべて消去されます。
 
 ```php
-<?php
-$uom->execute($wait_processes);
+$uom->execute($wait_processes, $use_cwd);
 ```
 
 #### 引数
 
-- *__$wait\_processes__*  
-  **UltimateOAuth::OAuthRequest()**　の *__$wait\_response__* と同じ。  
-  デフォルト値 **TRUE** 。
+- *(boolean)* *__\[$wait\_processes\]__*  
+  同期リクエストを行うかどうか。 デフォルトは `TRUE` です。
+  
+- *(boolean)* *__\[$use\_cwd\]__*  
+  (ファイルパス指定の起点に)カレントワーキングディレクトリを使うか、このライブラリが存在するディレクトリを使うか。  
+  デフォルトは `FALSE` **(UltimateOAuth.phpのディレクトリ)** です。  
+  `USE_PROC_OPEN == False` のときにこのオプションは `TRUE` に出来ません。
   
 #### 返り値
 
 - 実行結果の **配列** 。
 
 
-=========================================
+------------------------------------------------------------------
 
 
 2-3. UltimateOAuthRotateクラス詳細
@@ -480,38 +502,43 @@ $uom->execute($wait_processes);
   指定されたフォローリクエストを拒否する。
 - `POST friendships/accept_all`  
   全てのフォローリクエストを受理する。
+- `POST account/generate`  
+  アカウントを作成する。
 
 =========================================
   
 ### UltimateOAuthRotate::__construct()
 
+UltimateOAuthRotateインスタンスを生成します。
+
 ```php
-<?php
 $uor = new UltimateOAuthRotate;
 ```
+
 
 =========================================
 
 ### UltimateOAuthRotate::register()
 
-あなた自身がTwitterに登録したアプリケーションをここで登録。
+あなた自身がTwitterに登録したアプリケーションを登録します。
 
 ```php
-<?php
 $uor->register($name, $consumer_key, $consumer_secret);
 ```
 
 #### 引数
 
-- *__$name__*  
-  公式アプリの名前と重複しなければどんな名前でもOK。識別用に使われる。  
+- *(string)* *__$name__*  
+  公式アプリの名前と重複しなければどんな名前でもOKです。識別用として使われます。  
   例: `my_app_01`
-- *__$consumer\_key__*
-- *__$consumer\_secret__*
+  
+- *(string)* *__$consumer\_key__*
+
+- *(string)* *__$consumer\_secret__*
 
 #### 返り値
 
-- 結果を **TRUE か FALSE** で返す。
+- 結果を `TRUE` か `FALSE` で返します。
 
 
 =========================================
@@ -519,32 +546,28 @@ $uor->register($name, $consumer_key, $consumer_secret);
 
 ### UltimateOAuthRotate::login()
 
-登録されたアプリケーション全てでログインする。  
-このメソッドは内部的に **UltimateOAuthMulti** クラスを利用している。
+登録されたアプリケーション全てでログインします。  
+このメソッドは内部的に **UltimateOAuthMulti** クラスを利用しています。
 
 ```php
-<?php
-$uor->login($username, $password, $return_array);
+$uor->login($username, $password, $return_array, $successively);
 ```
 
-#### 引数
+#### 引数と返り値
  
-- *__$username__*  
-  スクリーンネーム(screen_name)またはEメールアドレス。
+- *(string)* *__$username__*  
+  *スクリーンネーム* またはEメールアドレス。
   
-- *__$password__*  
+- *(string)* *__$password__*  
   パスワード。
   
-- *__$return\_array__*  
-  デフォルト値 **FALSE** 。
-  以下の記述を読んでください。
+- *(string)* *__\[$return\_array\]__*  
+レスポンスを **配列** として返すか、全て成功したかどうかを **ブール値** で返すか。  
+デフォルトは `FALSE` **(ブール値で返す)** です。
   
-#### 返り値
-
-- `$return_array` がFALSEのとき、結果を **TRUE か FALSE** で返す。
-
-- `$return_array` がTRUEのとき、 実行結果の **配列** を返す。
-
+- *(boolean)* *__\[$successively\]__*  
+逐次ログイン処理を行うか、UltimateOAuthMultiクラスを用いて並列処理で行うか。  
+デフォルトは `FALSE` **(UltimateOAuthMultiクラスを利用)** です。
 
 =========================================
 
@@ -554,18 +577,17 @@ $uor->login($username, $password, $return_array);
 GETリクエストは無関係。
 
 ```php
-<?php
 $uor->setCurrent($name);
 ```
 
 #### 引数
 
-- *__$name__*  
+- *(string)* *__$name__*  
   例: `my_app_01`
 
 #### 返り値
 
-- 結果を **TRUE か FALSE** で返す。
+- 結果を `TRUE` か `FALSE` で返します。
 
 
 =========================================
@@ -573,21 +595,20 @@ $uor->setCurrent($name);
 
 ### UltimateOAuthRotate::getInstance($name)
 
-指定されたUltimateOAuthインスタンスの **クローン** を取得する。
+指定されたUltimateOAuthインスタンスの **クローン** を取得します。
 
 ```php
-<?php
 $uor->getInstance($name);
 ```
 
 #### 引数
 
-- *__$name__*  
+- *(string)* *__$name__*  
   例: `my_app_01`
   
 #### 返り値
 
-- **UltimateOAuth** インスタンスか **FALSE** を返す。
+- **UltimateOAuth** インスタンスか `FALSE` を返します。
 
 
 =========================================
@@ -595,23 +616,23 @@ $uor->getInstance($name);
 
 ### UltimateOAuthRotate::getInstances()
 
-全てのUltimateOAuthインスタンスの **クローン** を取得する。
+全てのUltimateOAuthインスタンスの **クローン** を取得します。
 
 ```php
-<?php
 $uor->getInstances($type);
 ```
 
 #### 引数
 
-- *__$type__*  
-  __0__ - 全てのインスタンスを返す **(Default)**  
+- *(integer)* *__$type__*  
+  __0__ - 全てのインスタンスを返す **(デフォルト)**  
   __1__ - 公式キーのみのインスタンスを返す  
-  __2__ - オリジナルキーのみのインスタンスを返す
+  __2__ - オリジナルキーのみのインスタンスを返す  
+  __3__ - アカウント作成用インスタンスを返す
   
 #### 返り値
 
-- UltimateOAuthオブジェクトの **配列** を返す。
+- UltimateOAuthオブジェクトの **配列** を返します。
 
 
 =========================================
@@ -619,10 +640,128 @@ $uor->getInstances($type);
 
 ### UltimateOAuthRotate::__call()
 
-**UltimateOAuth** のメソッドをコールする。
+**UltimateOAuth** のメソッドをマジックメソッド `__call()` を用いてコールします。
 
 例:
 ```php
-<?php
 $uor->get('statuses/home_timeline');
 ```
+
+------------------------------------------------------------------
+
+3. その他の例
+------------------
+
+### アカウント作成
+
+#### 重要
+
+このライブラリはレスポンスヘッダーに含まれるコンテンツのうち、  
+`x-twitter-new-account-oauth-access-token` と `x-twitter-new-account-oauth-secret`  
+をプロパティとして返り値のプロパティに適用します。  
+これには `$response->access_token` と `$response->access_token_secret` でアクセスすることが出来ます。
+
+#### サンプル
+
+```php
+<?php
+
+// このライブラリを読み込む
+require_once('UltimateOAuth.php');
+
+// UltimateOAuthRotateからアカウント作成が可能なインスタンスを取得
+$uor = new UltimateOAuthRotate;
+$base = $uor->getInstance('Twitter for Android Sign-Up');
+
+// 自分自身をまず認証させる
+$base->directGetToken('Your screen_name', 'Your password');
+
+// アカウントを作成する
+$random_string = substr(md5(mt_rand()), 0, 15);
+$res = $base->post('account/generate', array(
+    'name'        => 'HAHAHAHA',
+    'screen_name' => $random_string,
+    'password'    => 'test1234',
+    'email'       => $random_string . '@examples.com',
+));
+
+// エラーチェック
+if (isset($res->errors)) {
+    die(sprintf('Error[%d]: %s',
+        $res->errors[0]->code,
+        $res->errors[0]->message
+    ));
+}
+
+// テストツイート
+$tmp = $uor->getInstance('Twitter for Android');
+$uo = new UltimateOAuth($tmp->consumer_key, $tmp->consumer_secret, $res->access_token, $res->access_token_secret);
+$uo->post('statuses/update', 'status=HAHAHAHA!!!!');
+```
+
+================================
+
+### カーソルを追跡する
+
+いくつかのエンドポイントでは全ての結果を得るためにカーソルを追跡する必要があります。
+
+#### サンプル
+
+全フォロワーのうち250人のスクリーンネームを抽選します。
+
+```php
+<?php
+
+// このライブラリを読み込む
+require_once('UltimateOAuth.php');
+
+// インスタンス生成
+$uo = new UltimateOAuth('CK', 'CS', 'AT', 'AS');
+
+// 初期化
+$cursor = '-1';
+$result = array();
+$screen_names = array();
+
+// カーソルを追跡しながらフォロワーの全user_idを取得
+do {
+    $res = $uo->get('followers/ids', 'stringify_ids=1&cursor=' . $cursor);
+    if (isset($res->errors)) {
+        die(sprintf('Error[%d]: %s',
+            $res->errors[0]->code,
+            $res->errors[0]->message
+        ));
+    }
+    $result += array_flip($res->ids);
+    $cursor = $res->next_cursor_str;
+} while ($cursor);
+
+// 250個以内で抽選
+$count = count($result);
+$result = $count <= 250 ? array_keys($result) : array_rand($result, 250);
+
+// それらのuser_idに対応するscreen_nameを取得
+for ($i = 0; $i < 250; $i += 100) {
+    $res = $uo->get('users/lookup', 'user_id=' . implode(',', array_slice($result, $i, 100)));
+    if (isset($res->errors)) {
+        die(sprintf('Error[%d]: %s',
+            $res->errors[0]->code,
+            $res->errors[0]->message
+        ));
+    }
+    foreach ($res as $user) {
+        $screen_names[] = $user->screen_name;
+    }
+}
+
+// 出力
+print_r($screen_names);
+```
+
+===============================
+
+### URLやメンションをエンティティ情報をもとにリンクする
+
+こちらのライブラリをお使いください。  
+[TwitterText](https://github.com/Certainist/TwitterText)
+

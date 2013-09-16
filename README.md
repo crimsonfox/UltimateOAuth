@@ -46,7 +46,7 @@ $uo->getAuthenticateURL ($force_login = false);
 $uom = new UltimateOAuthMulti;
 
 $uom->enqueue (&$uo, $method, $arg1, $arg2, $arg3, ...);
-$uom->execute ();
+$uom->execute ($wait_processes = true, $use_cwd = false);
 ```
 
 ### UltimateOAuthRotate
@@ -61,10 +61,10 @@ $uor = new UltimateOAuthRotate;
 $uor->__call       ($name, $arguments);
 
 $uor->register     ($name, $consumer_key, $consumer_secret);
-$uor->login        ($username, $password, $return_array = false);
+$uor->login        ($username, $password, $return_array = false, $successively = false);
 $uor->setCurrent   ($name);
 $uor->getInstance  ($name);
-$uor->getInstances ();
+$uor->getInstances ($type);
 ```
 
 ------------------------------------------------------------------
@@ -338,7 +338,7 @@ $uo->OAuthRequestMultipart($endpoint, $params, $wait_response);
   ```
   
 - *(boolean)* *__\[$wait\_response\]__*  
-  Same as  **UltimateOAuth::OAuthRequest()**.
+  Same as  **UltimateOAuth::OAuthRequest()**.  
   `TRUE` as default.
   
 #### Return Value
@@ -456,14 +456,13 @@ Execute All jobs.
 After executing, all queues are dequeued.
 
 ```php
-$uom->execute($wait_processes);
+$uom->execute($wait_processes, $use_cwd);
 ```
 
 #### Arguments
 
 - *(boolean)* *__\[$wait\_processes\]__*  
-  Same as *__$wait\_response__* of **UltimateOAuth::OAuthRequest()**.  
-  `TRUE` as default.
+  Whether synchronous or not. `TRUE` as default.
   
 - *(boolean)* *__\[$use\_cwd\]__*  
   Whether use current working directory, or use the directory this library exists in.  
@@ -546,23 +545,22 @@ Login with all registered applications.
 This method depends on **UltimateOAuthMulti** class.
 
 ```php
-<?php
 $uor->login($username, $password, $return_array, $successively);
 ```
 
 #### Arguments and Return Value
  
-- *string* *__$username__*  
+- *(string)* *__$username__*  
   *screen_name* or E-mail Address.
   
-- *string* *__$password__*  
+- *(string)* *__$password__*  
   password.
   
-- *string* *__\[$return\_array\]__*  
+- *(string)* *__\[$return\_array\]__*  
 Whether return responses as **array**, or if all successful as **boolean**.  
 `FALSE` **(Return Boolean)** as default.
   
-- *boolean* *__\[$successively\]__*  
+- *(boolean)* *__\[$successively\]__*  
 Whether successively do all jobs, or parallelly do by UltimateOAuthMulti class.  
 `FALSE` **(By UltimateOAuthMulti)** as default.
 
@@ -574,7 +572,6 @@ Select an application for **POST** requesting.
 GET requests have nothing to do with this.
 
 ```php
-<?php
 $uor->setCurrent($name);
 ```
 
