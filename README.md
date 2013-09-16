@@ -440,6 +440,12 @@ $uom->enqueue($uo, $method, $arg1, $arg2, ...);
   
 - *(mixed)* *__\[$arg1\]__*, *__\[$arg2\]__*, *__\[...\]__*  
   Example: `'statuses/update', 'status=TestTweet'`
+  
+#### Note
+
+Arguments containing binary data cannot be enqueued.  
+You have to enqueue them with "@" prefix.  
+Example: `'status=test&@media[]=test.jpg'`
 
 =========================================
   
@@ -458,6 +464,11 @@ $uom->execute($wait_processes);
 - *(boolean)* *__\[$wait\_processes\]__*  
   Same as *__$wait\_response__* of **UltimateOAuth::OAuthRequest()**.  
   `TRUE` as default.
+  
+- *(boolean)* *__\[$use\_cwd\]__*  
+  Whether use current working directory, or use the directory this library exists in.  
+  `FALSE` **(UltimateOAuth.php directory)** as default.  
+  This cannot be True when `USE_PROC_OPEN == False`.
   
 #### Return Value
 

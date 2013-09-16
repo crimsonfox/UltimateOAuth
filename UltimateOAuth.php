@@ -5,7 +5,7 @@
  * 
  * A highly advanced Twitter library in PHP.
  * 
- * @Version 5.2.2
+ * @Version 5.2.3
  * @Author  CertaiN
  * @License BSD 2-Clause
  * @GitHub  http://github.com/certainist/UltimateOAuth
@@ -861,6 +861,9 @@ if (!class_exists('UltimateOAuthMulti')) {
         
         /**
          * Enqueue a new request.
+         * Note: Arguments containing binary data cannot be enqueued.
+         *       You have to enqueue them with "@" prefix.
+         *       e.x. "status=test&@media[]=test.jpg"
          * 
          * @access public
          * @param  UltimateOAuth &$uo    Passed by reference.
@@ -880,13 +883,20 @@ if (!class_exists('UltimateOAuthMulti')) {
          * 
          * @access public
          * @param  boolean [$wait_processes] Whether synchronous or not. True as default.
+         * @param  boolean [$use_cwd]        Whether use current working directory,
+         *                                   or use the directory this library exists in.
+         *                                   False as default.
+         *                                   This cannot be True when "USE_PROC_OPEN == False".
          * @return mixed                     An array contains responses or NULL.
          */
-        public function execute($wait_processes = true) {
-            $ret = UltimateOAuthConfig::USE_PROC_OPEN ?
-                $this->execute_by_proc_open($wait_processes) :
-                $this->execute_by_fsockopen($wait_processes)
-            ;
+        public function execute($wait_processes = true, $use_cwd = false) {
+            if (UltimateOAuthConfig::USE_PROC_OPEN) {
+                $ret = $this->execute_by_proc_open($wait_processes, $use_cwd);
+            } elseif ($use_cwd) {
+                throw new LogicException('$use_cwd cannot be True when "USE_PROC_OPEN == False".');
+            } else {
+                $ret = $this->execute_by_fsockopen($wait_processes);
+            }
             // clear queues
             $this->queues = array();
             return $ret;
@@ -910,10 +920,11 @@ if (!class_exists('UltimateOAuthMulti')) {
          * Used if USE_PROC_OPEN == True.
          * 
          * @access private
-         * @param  booelan $wait_processes
+         * @param  boolean $wait_processes
+         * @param  boolean $use_cwd
          * @return mixed
          */
-        private function execute_by_proc_open($wait_processes) {
+        private function execute_by_proc_open($wait_processes, $use_cwd) {
             // prepare proc_open() arguments
             $descriptorspec = array(
                 0 => array('pipe', 'r'),
@@ -939,7 +950,7 @@ if (!class_exists('UltimateOAuthMulti')) {
                     UltimateOAuthConfig::PHP_COMMAND,
                     $descriptorspec,
                     $pipes[$i],
-                    null,
+                    $use_cwd ? dirname($_SERVER['SCRIPT_FILENAME']) : dirname(__FILE__),
                     null,
                     array(
                         'bypass_shell' => true,
@@ -1054,7 +1065,7 @@ if (!class_exists('UltimateOAuthMulti')) {
          * Used if USE_PROC_OPEN == False.
          * 
          * @access private
-         * @param  booelan $wait_processes
+         * @param  boolean $wait_processes
          * @return mixed
          */
         private function execute_by_fsockopen($wait_processes) {
