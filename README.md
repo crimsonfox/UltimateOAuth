@@ -444,7 +444,7 @@ $uom->enqueue($uo, $method, $arg1, $arg2, ...);
 #### Note
 
 Arguments containing binary data cannot be enqueued.  
-You have to enqueue them with **`@`** prefix.  
+You have to enqueue them with `@` prefix.  
 Example: `'status=test&@media[]=test.jpg'`
 
 =========================================
