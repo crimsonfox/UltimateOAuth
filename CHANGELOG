@@ -1,6 +1,12 @@
 UltimateOAuth - changelog
 ========================
 
+5.3.1 (2013-10-18)
++ Changed some internal methods' name
++ static UltimateOAuth::fromAssoc()
++ UltimateOAuth::setProperties()
+- Reference of constructor argument in UltimateOAuthMulti
+
 5.3.0 (2013-09-16)
 + stream_socket_client()
 - fsockopen()

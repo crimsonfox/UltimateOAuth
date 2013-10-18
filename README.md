@@ -45,7 +45,7 @@ $uo->getAuthenticateURL ($force_login = false);
 ```php
 $uom = new UltimateOAuthMulti;
 
-$uom->enqueue (&$uo, $method, $arg1, $arg2, $arg3, ...);
+$uom->enqueue ($uo, $method, $arg1, $arg2, $arg3, ...);
 $uom->execute ($wait_processes = true, $use_cwd = false);
 ```
 
@@ -431,8 +431,8 @@ $uom->enqueue($uo, $method, $arg1, $arg2, ...);
 
 #### Arguments
 
-- *(UltimateOAuth)* *__&$uo__*  
-  An **UltimateOAuth** object. **Passed by reference**.
+- *(UltimateOAuth)* *__$uo__*  
+  An **UltimateOAuth** object.
   
 - *(string)* *__$method__*  
   A method name. This meanas **CLASS METHOD**. Not a HTTP method.  

@@ -46,7 +46,7 @@ $uo->getAuthenticateURL ($force_login = false);
 ```php
 $uom = new UltimateOAuthMulti;
 
-$uom->enqueue (&$uo, $method, $arg1, $arg2, $arg3, ...);
+$uom->enqueue ($uo, $method, $arg1, $arg2, $arg3, ...);
 $uom->execute ($wait_processes = true, $use_cwd = false);
 ```
 
@@ -436,8 +436,8 @@ $uom->enqueue($uo, $method, $arg1, $arg2, ...);
 
 #### 引数
 
-- *(UltimateOAuth)* *__&$uo__*  
-  **UltimateOAuth** オブジェクト。 **参照渡し** 。  
+- *(UltimateOAuth)* *__$uo__*  
+  **UltimateOAuth** オブジェクト。
   
 - *(string)* *__$method__*  
   メソッド名。 HTTPメソッドではなく **クラスメソッド** を意味します。  

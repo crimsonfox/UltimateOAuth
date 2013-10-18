@@ -5,7 +5,7 @@
  * 
  * A highly advanced Twitter library in PHP.
  * 
- * @Version 5.3.0
+ * @Version 5.3.1
  * @Author  CertaiN
  * @License BSD 2-Clause
  * @GitHub  http://github.com/certainist/UltimateOAuth
@@ -22,7 +22,7 @@
  *
  * @interface
  */
-if (!interface_exists('UltimateOAuthConfig')) {
+if (!class_exists('UltimateOAuthConfig')) {
     
     interface UltimateOAuthConfig {
         
@@ -114,6 +114,58 @@ if (!class_exists('UltimateOAuth')) {
         /***************************/
         /**** Interface Methods ****/
         /***************************/
+        
+        /**
+         * Create a new UltimateOAuth instance from an associative array.
+         * 
+         * @static
+         * @access public 
+         * @param  array  $params
+         */
+         public static function fromAssoc(array $params) {
+            $default = array(
+                'consumer_key'          => '',
+                'consumer_secret'       => '',
+                'access_token'          => '',
+                'access_token_secret'   => '',
+                'request_token'         => '',
+                'request_token_secret'  => '',
+                'oauth_verifier'        => '',
+                'authenticity_token'    => '',
+                'cookie'                => array(),
+                'last_http_status_code' => 0,
+                'last_called_endpoint'  => '',
+                'user_id'               => '',
+                'screen_name'           => '',
+            );
+            foreach ($default as $k => &$v) {
+                if (isset($params[$k])) {
+                    $v = $params[$k];
+                }
+            }
+            $ref = new ReflectionClass(__CLASS__);
+            return $ref->newInstanceArgs($default);
+        }
+        
+        /**
+         * Set properties from an associative array.
+         * 
+         * @access public 
+         * @param  array  $params
+         */
+        public function setProperties(array $params) {
+            foreach ($this as $k => $v) {
+                if (isset($params[$k])) {
+                    if ($k === 'cookie') {
+                        $this->$k = UltimateOAuthModule::arrayfy($params[$k]);
+                    } elseif ($k !== 'last_http_status_code') {
+                        $this->$k = UltimateOAuthModule::stringify($params[$k]);
+                    } else {
+                        $this->$k = (int)$params[$k];
+                    }
+                }
+            }
+        }
         
         /**
          * Create a new UltimateOAuth instance.
@@ -868,13 +920,13 @@ if (!class_exists('UltimateOAuthMulti')) {
          *       e.x. "status=test&@media[]=test.jpg"
          * 
          * @access public
-         * @param  UltimateOAuth &$uo    Passed by reference.
+         * @param  UltimateOAuth $uo
          * @param  string        $method A method name. This meanas CLASS METHOD. Not a HTTP method.
          * @param  mixed         [...]   Additional arguments for the method.
          */
-        public function enqueue(UltimateOAuth &$uo, $method) {
+        public function enqueue(UltimateOAuth $uo, $method) {
             $this->queues[] = (object)array(
-                'uo'     => &$uo,
+                'uo'     => $uo,
                 'method' => UltimateOAuthModule::stringify($method),
                 'args'   => array_slice(func_get_args(), 2),
             );
@@ -893,11 +945,11 @@ if (!class_exists('UltimateOAuthMulti')) {
          */
         public function execute($wait_processes = true, $use_cwd = false) {
             if (UltimateOAuthConfig::USE_PROC_OPEN) {
-                $ret = $this->execute_by_proc_open($wait_processes, $use_cwd);
+                $ret = $this->executeByProcOpen($wait_processes, $use_cwd);
             } elseif ($use_cwd) {
                 throw new LogicException('$use_cwd cannot be True when "USE_PROC_OPEN == False".');
             } else {
-                $ret = $this->execute_by_stream_socket_client($wait_processes);
+                $ret = $this->executeByStreamSocketClient($wait_processes);
             }
             // clear queues
             $this->queues = array();
@@ -926,7 +978,7 @@ if (!class_exists('UltimateOAuthMulti')) {
          * @param  boolean $use_cwd
          * @return mixed
          */
-        private function execute_by_proc_open($wait_processes, $use_cwd) {
+        private function executeByProcOpen($wait_processes, $use_cwd) {
             // prepare proc_open() arguments
             $descriptorspec = array(
                 0 => array('pipe', 'r'),
@@ -1057,7 +1109,21 @@ if (!class_exists('UltimateOAuthMulti')) {
                     continue;
                 }
                 $res[$i] = $r[1];
-                $this->queues[$i]->uo = $r[0];
+                $this->queues[$i]->uo->setProperties(array(
+                    'consumer_key'          => $r[0]->consumer_key,
+                    'consumer_secret'       => $r[0]->consumer_secret,
+                    'access_token'          => $r[0]->access_token,
+                    'access_token_secret'   => $r[0]->access_token_secret,
+                    'request_token'         => $r[0]->request_token,
+                    'request_token_secret'  => $r[0]->request_token_secret,
+                    'oauth_verifier'        => $r[0]->oauth_verifier,
+                    'authenticity_token'    => $r[0]->authenticity_token,
+                    'cookie'                => $r[0]->cookie,
+                    'last_http_status_code' => $r[0]->last_http_status_code,
+                    'last_called_endpoint'  => $r[0]->last_called_endpoint,
+                    'user_id'               => $r[0]->user_id,
+                    'screen_name'           => $r[0]->screen_name,
+                ));
             }
             // return responses
             return $res;
@@ -1070,7 +1136,7 @@ if (!class_exists('UltimateOAuthMulti')) {
          * @param  boolean $wait_processes
          * @return mixed
          */
-        private function execute_by_stream_socket_client($wait_processes) {
+        private function executeByStreamSocketClient($wait_processes) {
             // prepare URI elements
             $uri = parse_url(UltimateOAuthConfig::FULL_URL_TO_THIS_FILE);
             if (!isset($uri['host'])) {
@@ -1204,7 +1270,7 @@ if (!class_exists('UltimateOAuthMulti')) {
                 } 
                 // get result
                 $res[$i] = $r->result;
-                // reconstruction
+                // set properties
                 if (isset(
                     $r->uo->consumer_key,
                     $r->uo->consumer_secret,
@@ -1220,21 +1286,7 @@ if (!class_exists('UltimateOAuthMulti')) {
                     $r->uo->uesr_id,
                     $r->uo->screen_name
                 )) {
-                    $this->queues[$i]->uo = new UltimateOAuth(
-                        $r->uo->consumer_key,
-                        $r->uo->consumer_secret,
-                        $r->uo->access_token,
-                        $r->uo->access_token_secret,
-                        $r->uo->request_token,
-                        $r->uo->request_token_secret,
-                        $r->uo->oauth_verifier,
-                        $r->uo->authenticity_token,
-                        $r->uo->cookie,
-                        $r->uo->last_http_status_code,
-                        $r->uo->last_called_endpoint,
-                        $r->uo->uesr_id,
-                        $r->uo->screen_name
-                    );
+                    $this->queues[$i]->uo->setProperties((array)$r->uo);
                 }
             }
             // return responses
@@ -1464,8 +1516,8 @@ if (!class_exists('UltimateOAuthRotate')) {
                 }
             } else {
                 $uom = new UltimateOAuthMulti;
-                foreach ($this->instances as &$keys) {
-                    foreach ($keys as &$instance) {
+                foreach ($this->instances as $keys) {
+                    foreach ($keys as $instance) {
                         $uom->enqueue($instance, 'directGetToken', $username, $password);
                     }
                 }
@@ -1574,7 +1626,7 @@ if (!class_exists('UltimateOAuthRotate')) {
                     $elements = UltimateOAuthModule::parseUri($args[0]);
                     $endpoint = $elements['path'];
                     // create table
-                    $table = array_keys(self::getOfficialKeys());
+                    $table = array_keys(UltimateOAuthModule::getOfficialKeys());
                     // count up
                     if (!isset($this->current['GET'][$endpoint])) {
                         $this->current['GET'][$endpoint] = 0;
