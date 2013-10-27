@@ -4,7 +4,7 @@ UltimateOAuth
 
 [English](https://github.com/Certainist/UltimateOAuth/blob/master/README.md)
 
-@Version: 5.3.1  
+@Version: 5.3.2  
 @Author : CertaiN  
 @License: BSD 2-Clause  
 @GitHub : http://github.com/certainist  
@@ -12,13 +12,19 @@ UltimateOAuth
 
 ## \[特長\]
 
-- PHP **5.2.0** 以降で動作。
-- **cURL** や他のライブラリに依存しない。
-- UNIXとWindowsを両方サポート。
-- **同期リクエスト・非同期リクエスト** を両方サポート。
-- **疑似xAuth認証** をサポート。
-- **アカウント作成** をサポート。
-- **API制限回避** を簡単に実現可能。
+[twitteroauth](https://github.com/abraham/twitteroauth)と使い方が非常によく似ています。  
+一方、このライブラリ独自の機能もあります。
+
+| 項目 | twitteroauth | UltimateOAuth |
+| :----: | :-----------: | :------------: |
+| サポートするPHPバージョン | 5.2.0以降 | 5.2.0以降 |
+| 依存 | cURL, OAuth.php | 無し(単一ファイル) |
+| 画像アップロード | × | ○ |
+| 同期リクエスト | ○ | ○ |
+| 非同期リクエスト | × | ○ |
+| 疑似xAuth認証 | × | ○ |
+| アカウント作成 | × | ○ |
+| API制限回避 | × | ○ |
 
 ## \[クラス・メソッド一覧\]
 

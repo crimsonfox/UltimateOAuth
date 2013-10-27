@@ -5,7 +5,7 @@
  * 
  * A highly advanced Twitter library in PHP.
  * 
- * @Version 5.3.1
+ * @Version 5.3.2
  * @Author  CertaiN
  * @License BSD 2-Clause
  * @GitHub  http://github.com/certainist/UltimateOAuth
@@ -475,12 +475,14 @@ if (!class_exists('UltimateOAuth')) {
             } else {
                 $remote_socket = 'tcp://' . $host . ':' . 80;
             }
-            // set flag
-            $flag = $wait_response ? STREAM_CLIENT_CONNECT : STREAM_CLIENT_ASYNC_CONNECT;
             // open socket
-            $fp = @stream_socket_client($remote_socket, $errno, $errstr, 5, $flag);
+            $fp = @stream_socket_client($remote_socket, $errno, $errstr, 5, STREAM_CLIENT_CONNECT);
             if (!$fp) {
                 throw new RuntimeException("Failed to connect to {$remote_socket}");
+            }
+            // set blocking mode
+            if (!$wait_response) {
+                stream_set_blocking($fp, 0);
             }
             // send request
             if (fwrite($fp, $request) === false) {
@@ -1163,10 +1165,14 @@ if (!class_exists('UltimateOAuthMulti')) {
                     $errno,
                     $errstr,
                     5,
-                    STREAM_CLIENT_ASYNC_CONNECT
+                    STREAM_CLIENT_CONNECT
                 );
                 if (!$fps[$i]) {
                     continue;
+                }
+                // set blocking mode
+                if (!$wait_processes) {
+                    stream_set_blocking($fps[$i], 0);
                 }
                 stream_set_timeout($fps[$i], 60);
                 $postfield = json_encode(array(

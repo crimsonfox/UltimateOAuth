@@ -1,6 +1,9 @@
 UltimateOAuth - changelog
 ========================
 
+5.3.2 (2013-10-28)
++ Fixed fwrite() problem when non-blocking mode
+
 5.3.1 (2013-10-18)
 + Changed some internal methods' name
 + static UltimateOAuth::fromAssoc()
