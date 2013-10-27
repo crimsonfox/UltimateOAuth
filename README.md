@@ -24,14 +24,6 @@ Very similar to [twitteroauth](https://github.com/abraham/twitteroauth).
 | Generating Accounts | No | Yes |
 | Avoid API Limits | No | Yes |
 
-- Requires PHP **5.2.0** or later.
-- Not depends on **cURL**, or any other files.
-- Both UNIX & Windows are supported.
-- Both **sync & async** requests are supported.
-- **Para-xAuth authorization** is supported.
-- **Account generation** is supported.
-- You can **avoid API limit** easily.
-
 ## \[Supported Classes and Methods\]
 
 ### UltimateOAuth
