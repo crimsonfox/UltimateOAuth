@@ -15,14 +15,14 @@ Very similar to [twitteroauth](https://github.com/abraham/twitteroauth).
 
 | Item | twitteroauth | UltimateOAuth |
 | :----: | :-----------: | :------------: |
-| Supported PHP Version | 5.2.0 or newer | 5.2.0 or newer |
+| Supported PHP Version | 5.2.0 or Newer | 5.2.0 or Newer |
 | Dependence | cURL, OAuth.php | None(It works only on this file.) |
 | Uploading Images | No | Yes |
 | Synchronize Requests | Yes | Yes |
 | Asynchronize Requests | No | Yes |
 | Para-xAuth Authorization | No | Yes |
 | Generating Accounts | No | Yes |
-| Avoid API limits | No | Yes |
+| Avoid API Limits | No | Yes |
 
 - Requires PHP **5.2.0** or later.
 - Not depends on **cURL**, or any other files.
