@@ -18,6 +18,7 @@ On the other hand, there are some original functions.
 | :----: | :-----------: | :------------: |
 | Supported PHP Version | 5.2.0 or Newer | 5.2.0 or Newer |
 | Dependence | cURL, OAuth.php | None(It works only on this file.) |
+| Automatically Fix Weird Responses | No | Yes |
 | Uploading Images | No | Yes |
 | Synchronize Requests | Yes | Yes |
 | Asynchronize Requests | No | Yes |
