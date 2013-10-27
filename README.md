@@ -12,6 +12,7 @@ UltimateOAuth
 ## \[Features\]
 
 Very similar to [twitteroauth](https://github.com/abraham/twitteroauth).  
+On the other hand, there are some original functions.
 
 | Item | twitteroauth | UltimateOAuth |
 | :----: | :-----------: | :------------: |
