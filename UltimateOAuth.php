@@ -5,7 +5,7 @@
  * 
  * A highly advanced Twitter library in PHP.
  * 
- * @Version 5.3.2
+ * @Version 5.3.3
  * @Author  CertaiN
  * @License BSD 2-Clause
  * @GitHub  http://github.com/certainist/UltimateOAuth
@@ -1051,13 +1051,10 @@ if (!class_exists('UltimateOAuthMulti')) {
                     }
                     while (!feof($pipe[1]) || !feof($pipe[2])) {
                         // select socket stream
-                        $ret = @stream_select(
-                            $read = array($pipe[1], $pipe[2]),
-                            $write = null,
-                            $except = null,
-                            $timeout = 5
-                        );  
-                        if (!$ret) {
+                        $read = array($pipe[1], $pipe[2]);
+                        $write = null;
+                        $except = null;
+                        if (!@stream_select($read, $write, $except, 5)) {
                             $res[$i] = 'Failed to select stream resource, or timeout.';
                             $err_flags[$i] = true;
                             fclose($pipe[1]);
