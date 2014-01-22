@@ -5,7 +5,7 @@
  * 
  * A highly advanced Twitter library in PHP.
  * 
- * @Version 5.3.3
+ * @Version 5.3.4
  * @Author  CertaiN
  * @License BSD 2-Clause
  * @GitHub  http://github.com/certainist/UltimateOAuth
@@ -22,7 +22,7 @@
  *
  * @interface
  */
-if (!class_exists('UltimateOAuthConfig')) {
+if (!interface_exists('UltimateOAuthConfig')) {
     
     interface UltimateOAuthConfig {
         

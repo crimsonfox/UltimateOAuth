@@ -1,6 +1,10 @@
 UltimateOAuth - changelog
 ========================
 
+5.3.4 (2013-01-22)
+- class_exists('UltimateOAuthConfig')
++ interface_exists('UltimateOAuthConfig')
+
 5.3.3 (2013-11-20)
 + Changed stream_select() arguments as those follows Strict Standards.
 

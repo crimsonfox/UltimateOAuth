@@ -4,7 +4,7 @@ UltimateOAuth
 
 [日本語](https://github.com/Certainist/UltimateOAuth/blob/master/README-Japanese.md)
 
-@Version: 5.3.3  
+@Version: 5.3.4  
 @Author : CertaiN  
 @License: BSD 2-Clause  
 @GitHub : http://github.com/certainist  
