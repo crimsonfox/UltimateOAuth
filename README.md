@@ -1,3 +1,5 @@
+**Notice: [TwistOAuth](https://github.com/Certainist/TwistOAuth) has been released!!**
+
 UltimateOAuth
 =============
 *A __highly advanced__ Twitter library in PHP.*

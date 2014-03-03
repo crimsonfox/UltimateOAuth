@@ -1,3 +1,5 @@
+**連絡: [TwistOAuth](https://github.com/Certainist/TwistOAuth) がリリースされました！**
+
 UltimateOAuth
 =============
 *__非常に高機能な__ PHPのTwitterライブラリです。*
